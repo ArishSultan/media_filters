@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "binarycodable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/christophhagen/BinaryCodable",
+      "state" : {
+        "revision" : "f4bdd82c5da4a825634bd32c3b2ef70faa773143",
+        "version" : "3.0.3"
+      }
+    },
+    {
+      "identity" : "swiftcube",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ronan18/SwiftCube",
+      "state" : {
+        "revision" : "ccd63fd86f49e9020142a45f503eb92c50e8ef35",
+        "version" : "1.0.1"
+      }
+    }
+  ],
+  "version" : 2
+}
