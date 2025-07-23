@@ -1,8 +1,6 @@
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:media_filters/media_filters.dart';
 
 void main() {
@@ -17,7 +15,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final controller = VideoPreviewController.factory();
+  final controller = VideoPreviewController();
 
   var shouldShow = false;
 
@@ -26,7 +24,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     initPlatformState();
 
-    controller.setup();
+    // controller.setup();
     // print(controller.viewId);
   }
 
@@ -49,13 +47,13 @@ class _MyAppState extends State<MyApp> {
                 );
 
                 if (file != null) {
-                  controller.loadVideo(file.paths[0]!);
+                  controller.loadVideoFile(file.paths[0]!);
 
-                  Future.delayed(Duration(seconds: 2), () {
-                    shouldShow = true;
-
-                    setState(() {});
-                  });
+                  // Future.delayed(Duration(seconds: 2), () {
+                  //   shouldShow = true;
+                  //
+                  //   setState(() {});
+                  // });
                 }
               },
             ),
@@ -69,7 +67,7 @@ class _MyAppState extends State<MyApp> {
                 );
 
                 if (file != null) {
-                  controller.loadFilter(file.paths[0]!);
+                  controller.loadFilterFile(file.paths[0]!);
                 }
               },
             ),
@@ -90,20 +88,91 @@ class _MyAppState extends State<MyApp> {
                 ),
               ],
             ),
-            if (shouldShow)
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: UiKitView(
-                  viewType: 'media_filters.preview',
-                  creationParams: controller.viewId,
-                  creationParamsCodec: const StandardMessageCodec(),
-                ),
-              ),
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: VideoPreview(controller: controller),
+            ),
+
+            StreamBuilder(
+              stream: controller.duration,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircularProgressIndicator();
+                }
+
+                final duration = snapshot.data!;
+
+                return StreamBuilder(
+                  stream: controller.progress,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return CircularProgressIndicator();
+                    }
+
+                    final progress = snapshot.data!;
+
+                    return Slider(
+                      divisions: 100,
+                      year2023:false,
+                      min: 0,
+                      max: duration.inMicroseconds.toDouble(),
+                      value: progress.inMicroseconds.toDouble(),
+                      onChanged: (val) {
+                        controller.seekTo(val.round());
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: StreamBuilder(
+            //         stream: controller.state,
+            //         builder: (context, snapshot) {
+            //           if (snapshot.hasData) {
+            //             return Text(snapshot.data!.toString());
+            //           }
+            //
+            //           return CircularProgressIndicator();
+            //         },
+            //       ),
+            //     ),
+            //
+            //     Expanded(
+            //       child: StreamBuilder(
+            //         stream: controller.progress,
+            //         builder: (context, snapshot) {
+            //           if (snapshot.hasData) {
+            //             return Text(snapshot.data!.toString());
+            //           }
+            //
+            //           return CircularProgressIndicator();
+            //         },
+            //       ),
+            //     ),
+            //
+            //     Expanded(
+            //       child: StreamBuilder(
+            //         stream: controller.duration,
+            //         builder: (context, snapshot) {
+            //           if (snapshot.hasData) {
+            //             return Text(snapshot.data!.toString());
+            //           }
+            //
+            //           return CircularProgressIndicator();
+            //         },
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),
     );
   }
+
   //
   @override
   void dispose() {

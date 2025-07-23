@@ -5,7 +5,6 @@ public class VideoPreviewManager {
 
     private let lock = NSLock()
     private var previews: [Int: VideoPreview] = [:]
-    private var nextPreviewId: Int = 1
 
     private init() {}
     
@@ -13,32 +12,36 @@ public class VideoPreviewManager {
         return previews.count;
     }
 
-    func createPreview() -> Int {
+    func createPreview(viewId: Int) -> VideoPreview {
         lock.lock()
         defer { lock.unlock() }
+        
+        if let existingPreview = previews[viewId] {
+            return existingPreview
+        }
 
-        let previewId = nextPreviewId
-        nextPreviewId += 1
+        let preview = VideoPreview(id: viewId)
+        previews[viewId] = preview
 
-        let preview = VideoPreview(id: previewId)
-        previews[previewId] = preview
-
-        return previewId
+        return preview
     }
 
-    func getPreview(id: Int) -> VideoPreview? {
+    func getPreview(_ viewId: Int) -> VideoPreview? {
         lock.lock()
         defer { lock.unlock() }
-        return previews[id]
+        return previews[viewId]
     }
 
-    @MainActor func destroyPreview(id: Int) {
+    func destroyPreview(viewId: Int) {
         lock.lock()
         defer { lock.unlock() }
 
-        if let preview = previews[id] {
-//            preview.cleanup()
-            previews.removeValue(forKey: id)
+        if let preview = previews[viewId] {
+            previews.removeValue(forKey: viewId)
+            
+            Task { @MainActor in
+                preview.cleanup()
+            }
         }
     }
 
@@ -47,7 +50,7 @@ public class VideoPreviewManager {
         defer { lock.unlock() }
 
         for preview in previews.values {
-//            preview.cleanup()
+            preview.cleanup()
         }
         previews.removeAll()
     }

@@ -18,16 +18,18 @@ class VideoPreviewViewFactory: NSObject, FlutterPlatformViewFactory {
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
-            binaryMessenger: messenger)
+            binaryMessenger: messenger,
+        )
     }
 
     public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
-          return FlutterStandardMessageCodec.sharedInstance()
+        return FlutterStandardMessageCodec.sharedInstance()
     }
 }
 
 class FLNativeView: NSObject, FlutterPlatformView {
     private var _view: UIView
+    private var _viewId: Int = -1
 
     init(
         frame: CGRect,
@@ -35,50 +37,47 @@ class FLNativeView: NSObject, FlutterPlatformView {
         arguments args: Any?,
         binaryMessenger messenger: FlutterBinaryMessenger?
     ) {
-        print("I am here at frame \(frame)")
-        _view = CustomUIView()
+        _view = VidePreviewUIView()
+        _viewId = Int(viewId)
         super.init()
-        createNativeView(view: _view, frame: frame, viewId: (args as? Int)!)
+
+        createNativeView(view: _view, viewId: Int(viewId))
     }
 
     func view() -> UIView {
         return _view
     }
 
-    func createNativeView(view: UIView, frame: CGRect, viewId: Int) {
-        view.frame = frame
-        view.backgroundColor = UIColor.black
-        
-        print("🎬 Creating native view for ID: \(viewId)")
-        
-        guard let preview = VideoPreviewManager.instance.getPreview(id: viewId) else {
-            print("❌ Failed to get preview for viewId: \(viewId)")
-            // Show error state
-            let errorLabel = UILabel()
-            errorLabel.text = "Video Preview Error"
-            errorLabel.textColor = .white
-            errorLabel.textAlignment = .center
-            errorLabel.frame = view.bounds
-            view.addSubview(errorLabel)
-            return
-        }
-
-        // Attach the preview to this view
+    func createNativeView(view: UIView, viewId: Int) {
+        let preview = VideoPreviewManager.instance.createPreview(viewId: viewId)
         preview.attachToView(view)
-        
-        print("✅ Video preview attached to view")
-        
-        // Debug after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            preview.debugState()
+    }
+    
+    deinit {
+        if (_viewId > -1) {
+            VideoPreviewManager.instance.destroyPreview(viewId: _viewId)
         }
     }
 }
 
-class CustomUIView: UIView {
+class VidePreviewUIView: UIView {
     override func layoutSubviews() {
-        for sublayer in self.layer.sublayers! {
-            sublayer.frame = bounds
+        super.layoutSubviews() // It's good practice to call super
+
+        // Determine the correct frame to use
+        let newFrame: CGRect
+        if bounds.width.isInfinite || bounds.height.isInfinite {
+            // If the view's bounds are infinite, use a zero-sized frame
+            newFrame = .zero
+        } else {
+            // Otherwise, use the view's actual bounds
+            newFrame = bounds
+        }
+
+        // Safely iterate through sublayers and assign the new frame
+        // Using `?? []` is safer than force-unwrapping with `!`
+        for sublayer in self.layer.sublayers ?? [] {
+            sublayer.frame = newFrame
         }
     }
 }
