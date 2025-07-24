@@ -231,6 +231,101 @@ class ApiVideoPreview extends jni$_.JObject {
             _id_removeStateCallbacks as jni$_.JMethodIDPtr, i)
         .check();
   }
+
+  static final _id_loadFilterFile = _class.staticMethodId(
+    r'loadFilterFile',
+    r'(ILjava/lang/String;)V',
+  );
+
+  static final _loadFilterFile = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_
+                          .VarArgs<(jni$_.Int32, jni$_.Pointer<jni$_.Void>)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr, int, jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `static public final void loadFilterFile(int i, java.lang.String string)`
+  static void loadFilterFile(
+    int i,
+    jni$_.JString string,
+  ) {
+    final _$string = string.reference;
+    _loadFilterFile(_class.reference.pointer,
+            _id_loadFilterFile as jni$_.JMethodIDPtr, i, _$string.pointer)
+        .check();
+  }
+
+  static final _id_exportVideo = _class.staticMethodId(
+    r'exportVideo',
+    r'(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;IIZILdev/arish/media_filters/StringValueCallback;)V',
+  );
+
+  static final _exportVideo = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JThrowablePtr Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Pointer<jni$_.Void>,
+                        jni$_.Pointer<jni$_.Void>,
+                        jni$_.Pointer<jni$_.Void>,
+                        jni$_.Int32,
+                        jni$_.Int32,
+                        jni$_.Int32,
+                        jni$_.Int32,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              int,
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.Pointer<jni$_.Void>,
+              int,
+              int,
+              int,
+              int,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `static public final void exportVideo(int i, java.lang.String string, java.lang.String string1, java.lang.String string2, int i1, int i2, boolean z, int i3, dev.arish.media_filters.StringValueCallback stringValueCallback)`
+  static void exportVideo(
+    int i,
+    jni$_.JString string,
+    jni$_.JString? string1,
+    jni$_.JString string2,
+    int i1,
+    int i2,
+    bool z,
+    int i3,
+    jni$_.JObject stringValueCallback,
+  ) {
+    final _$string = string.reference;
+    final _$string1 = string1?.reference ?? jni$_.jNullReference;
+    final _$string2 = string2.reference;
+    final _$stringValueCallback = stringValueCallback.reference;
+    _exportVideo(
+            _class.reference.pointer,
+            _id_exportVideo as jni$_.JMethodIDPtr,
+            i,
+            _$string.pointer,
+            _$string1.pointer,
+            _$string2.pointer,
+            i1,
+            i2,
+            z ? 1 : 0,
+            i3,
+            _$stringValueCallback.pointer)
+        .check();
+  }
 }
 
 final class $ApiVideoPreview$NullableType

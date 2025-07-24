@@ -20,18 +20,26 @@ abstract final class DarwinFFI {
     vpSeek = lib.lookupFunction<VPSeekFFI, VPSeek>('vpSeek');
 
     vpLoadLutFile = lib.lookupFunction<VPLoadResourceStrFFI, VPLoadResourceStr>(
-        'vpLoadFilterFile');
+      'vpLoadFilterFile',
+    );
     vpLoadVideoFile =
         lib.lookupFunction<VPLoadResourceStrFFI, VPLoadResourceStr>(
-            'vpLoadVideoFile');
+      'vpLoadVideoFile',
+    );
 
     vpSetStateCallbacks =
         lib.lookupFunction<VPSetStateCallbacksFFI, VPSetStateCallbacks>(
-            'vpSetStateCallback');
+      'vpSetStateCallback',
+    );
 
     vpRemoveStateCallbacks =
         lib.lookupFunction<VPRemoveStateCallbacksFFI, VPRemoveStateCallbacks>(
-            'vpRemoveStateCallback');
+      'vpRemoveStateCallback',
+    );
+
+    vpExportVideo = lib.lookupFunction<VPExportVideoFFI, VPExportVideo>(
+      'vpExportVideo',
+    );
 
     _initialized = true;
   }
@@ -45,4 +53,6 @@ abstract final class DarwinFFI {
 
   static late final VPSetStateCallbacks vpSetStateCallbacks;
   static late final VPRemoveStateCallbacks vpRemoveStateCallbacks;
+
+  static late final VPExportVideo vpExportVideo;
 }

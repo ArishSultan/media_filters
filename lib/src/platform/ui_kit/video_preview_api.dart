@@ -84,6 +84,51 @@ final class VideoPreviewDarwinApi extends VideoPreviewPlatformApi {
     );
   }
 
+  @override
+  Future<String> exportVideo({
+    required int viewId,
+    required String videoPath,
+    String? filterPath,
+    required String outputPath,
+    required int outputWidth,
+    required int outputHeight,
+    required bool maintainAspectRatio,
+  }) async {
+    final videoPathPtr = videoPath.toNativeUtf8();
+    final filterPathPtr = filterPath?.toNativeUtf8();
+    final outputPathPtr = outputPath.toNativeUtf8();
+
+    // Create a completer to handle the async result
+    final completer = Completer<String>();
+    final exportId = DateTime.now().millisecondsSinceEpoch;
+    _exportCompleters[exportId] = completer;
+
+    try {
+      final result = DarwinFFI.vpExportVideo(
+        viewId,
+        videoPathPtr,
+        filterPathPtr ?? nullptr,
+        outputPathPtr,
+        outputWidth,
+        outputHeight,
+        maintainAspectRatio ? 1 : 0,
+        exportId,
+        _onExportCompletePtr.nativeFunction,
+      );
+
+      if (result != 0) {
+        _exportCompleters.remove(exportId);
+        throw Exception('Failed to start video export: error code $result');
+      }
+
+      return await completer.future;
+    } finally {
+      malloc.free(videoPathPtr);
+      if (filterPathPtr != null) malloc.free(filterPathPtr);
+      malloc.free(outputPathPtr);
+    }
+  }
+
   static final _onStateCallbackPtr =
       NativeCallable<VPStateCallbackFFI>.listener(
     _onStateCallback,
@@ -98,6 +143,24 @@ final class VideoPreviewDarwinApi extends VideoPreviewPlatformApi {
       NativeCallable<VPDurationCallbackFFI>.listener(
     _onDurationCallback,
   );
+
+  static final _onExportCompletePtr =
+      NativeCallable<VPExportCompleteCallbackFFI>.listener(
+    _onExportComplete,
+  );
+}
+
+final _exportCompleters = <int, Completer<String>>{};
+
+void _onExportComplete(int exportId, Pointer<Utf8> outputPath, int errorCode) {
+  final completer = _exportCompleters.remove(exportId);
+  if (completer != null) {
+    if (errorCode == 0) {
+      completer.complete(outputPath.toDartString());
+    } else {
+      completer.completeError(Exception('Export failed with error code: $errorCode'));
+    }
+  }
 }
 
 final _durationStreamControllerRegister = <int, StreamController<Duration>>{};

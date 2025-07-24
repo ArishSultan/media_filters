@@ -106,3 +106,50 @@ public func vpRemoveStateCallback(viewId: Int) -> Int {
 
     return 0
 }
+
+public typealias VideoExportCompleteCallback = @convention(c) (Int, UnsafePointer<CChar>?, Int) -> Void
+
+///
+@_cdecl("vpExportVideo")
+public func vpExportVideo(
+    viewId: Int,
+    videoPath: UnsafePointer<CChar>,
+    filterPath: UnsafePointer<CChar>?,
+    outputPath: UnsafePointer<CChar>,
+    outputWidth: Int,
+    outputHeight: Int,
+    maintainAspectRatio: Int,
+    exportId: Int,
+    completionCallback: @escaping VideoExportCompleteCallback
+) -> Int {
+    guard let preview = VideoPreviewManager.instance.getPreview(viewId) else {
+        return FFIErrorCodes.VideoPreviewNotFound
+    }
+    
+    let videoPathStr = String(cString: videoPath)
+    let filterPathStr = filterPath != nil ? String(cString: filterPath!) : nil
+    let outputPathStr = String(cString: outputPath)
+    let shouldMaintainAspectRatio = maintainAspectRatio != 0
+    
+    Task { @MainActor in
+        do {
+            let exportedPath = try await preview.exportVideo(
+                videoPath: videoPathStr,
+                filterPath: filterPathStr,
+                outputPath: outputPathStr,
+                outputWidth: outputWidth,
+                outputHeight: outputHeight,
+                maintainAspectRatio: shouldMaintainAspectRatio
+            )
+            
+            exportedPath.withCString { pathPtr in
+                completionCallback(exportId, pathPtr, 0)
+            }
+        } catch {
+            print("❌ Export failed: \(error)")
+            completionCallback(exportId, nil, -1)
+        }
+    }
+    
+    return 0
+}

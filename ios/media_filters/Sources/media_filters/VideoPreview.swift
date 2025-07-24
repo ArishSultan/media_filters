@@ -394,6 +394,135 @@ public class VideoPreview: NSObject {
         return currentFilter != nil && videoComposition != nil
     }
     
+    // MARK: - Video Export
+    @MainActor public func exportVideo(
+        videoPath: String,
+        filterPath: String?,
+        outputPath: String,
+        outputWidth: Int,
+        outputHeight: Int,
+        maintainAspectRatio: Bool
+    ) async throws -> String {
+        // Validate input file
+        guard FileManager.default.fileExists(atPath: videoPath) else {
+            throw NSError(domain: "VideoExport", code: -1, userInfo: [NSLocalizedDescriptionKey: "Input video file not found"])
+        }
+        
+        // Load filter if provided
+        var exportFilter: CIFilter?
+        if let filterPath = filterPath {
+            guard FileManager.default.fileExists(atPath: filterPath) else {
+                throw NSError(domain: "VideoExport", code: -2, userInfo: [NSLocalizedDescriptionKey: "Filter file not found"])
+            }
+            
+            guard let sc3dFilter = try? SC3DLut(contentsOf: URL(fileURLWithPath: filterPath)),
+                  let ciFilter = try? sc3dFilter.ciFilter() else {
+                throw NSError(domain: "VideoExport", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to create filter"])
+            }
+            exportFilter = ciFilter
+        }
+        
+        // Create output directory if needed
+        let outputURL = URL(fileURLWithPath: outputPath)
+        try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true, attributes: nil)
+        
+        // Generate unique output filename
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let outputFileName = "exported_video_\(timestamp).mp4"
+        let outputFileURL = outputURL.appendingPathComponent(outputFileName)
+        
+        // Remove existing file if it exists
+        if FileManager.default.fileExists(atPath: outputFileURL.path) {
+            try FileManager.default.removeItem(at: outputFileURL)
+        }
+        
+        let inputAsset = AVAsset(url: URL(fileURLWithPath: videoPath))
+        
+        // Create export session
+        guard let exportSession = AVAssetExportSession(asset: inputAsset, presetName: AVAssetExportPresetHighestQuality) else {
+            throw NSError(domain: "VideoExport", code: -4, userInfo: [NSLocalizedDescriptionKey: "Failed to create export session"])
+        }
+        
+        exportSession.outputURL = outputFileURL
+        exportSession.outputFileType = .mp4
+        
+        // Configure video composition if filter is provided
+        if let filter = exportFilter {
+            let videoTrack = inputAsset.tracks(withMediaType: .video).first
+            guard let videoTrack = videoTrack else {
+                throw NSError(domain: "VideoExport", code: -5, userInfo: [NSLocalizedDescriptionKey: "No video track found"])
+            }
+            
+            let videoComposition = AVVideoComposition(asset: inputAsset) { request in
+                let sourceImage = request.sourceImage.clampedToExtent()
+                filter.setValue(sourceImage, forKey: kCIInputImageKey)
+                
+                if let filteredImage = filter.outputImage {
+                    request.finish(with: filteredImage, context: nil)
+                } else {
+                    request.finish(with: sourceImage, context: nil)
+                }
+            }
+            
+            // Apply resolution settings
+            if maintainAspectRatio {
+                let naturalSize = videoTrack.naturalSize
+                let aspectRatio = naturalSize.width / naturalSize.height
+                let newHeight = Int(Double(outputWidth) / aspectRatio)
+                videoComposition.renderSize = CGSize(width: outputWidth, height: newHeight)
+            } else {
+                videoComposition.renderSize = CGSize(width: outputWidth, height: outputHeight)
+            }
+            
+            exportSession.videoComposition = videoComposition
+        } else {
+            // No filter, just resize if needed
+            if maintainAspectRatio {
+                if let videoTrack = inputAsset.tracks(withMediaType: .video).first {
+                    let naturalSize = videoTrack.naturalSize
+                    let aspectRatio = naturalSize.width / naturalSize.height
+                    let newHeight = Int(Double(outputWidth) / aspectRatio)
+                    
+                    let videoComposition = AVMutableVideoComposition()
+                    videoComposition.renderSize = CGSize(width: outputWidth, height: newHeight)
+                    videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
+                    
+                    let instruction = AVMutableVideoCompositionInstruction()
+                    instruction.timeRange = CMTimeRange(start: .zero, duration: inputAsset.duration)
+                    
+                    let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+                    
+                    let scaleX = CGFloat(outputWidth) / naturalSize.width
+                    let scaleY = CGFloat(newHeight) / naturalSize.height
+                    let scale = min(scaleX, scaleY)
+                    
+                    let transform = CGAffineTransform(scaleX: scale, y: scale)
+                    layerInstruction.setTransform(transform, at: .zero)
+                    
+                    instruction.layerInstructions = [layerInstruction]
+                    videoComposition.instructions = [instruction]
+                    
+                    exportSession.videoComposition = videoComposition
+                }
+            }
+        }
+        
+        // Export the video
+        await exportSession.export()
+        
+        switch exportSession.status {
+        case .completed:
+            return outputFileURL.path
+        case .failed:
+            let error = exportSession.error ?? NSError(domain: "VideoExport", code: -6, userInfo: [NSLocalizedDescriptionKey: "Export failed with unknown error"])
+            throw error
+        case .cancelled:
+            throw NSError(domain: "VideoExport", code: -7, userInfo: [NSLocalizedDescriptionKey: "Export was cancelled"])
+        default:
+            throw NSError(domain: "VideoExport", code: -8, userInfo: [NSLocalizedDescriptionKey: "Export failed with status: \(exportSession.status.rawValue)"])
+        }
+    }
+    
     // MARK: - Debug
     public func debugState() {
         print("""

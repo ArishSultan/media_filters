@@ -47,4 +47,24 @@ abstract class VideoPreviewPlatformApi {
 
   ///
   void removeStateCallbacks(int viewId);
+
+  /// Exports a video with applied filter to a specified location.
+  ///
+  /// [viewId] The unique identifier of the native view.
+  /// [videoPath] Path to the input video file.
+  /// [filterPath] Path to the filter/LUT file to apply (can be null for no filter).
+  /// [outputPath] Directory where the exported video should be saved.
+  /// [outputWidth] Desired output width in pixels.
+  /// [outputHeight] Desired output height in pixels.
+  /// [maintainAspectRatio] Whether to maintain the original aspect ratio.
+  /// Returns a [Future<String>] containing the path to the exported video file.
+  Future<String> exportVideo({
+    required int viewId,
+    required String videoPath,
+    String? filterPath,
+    required String outputPath,
+    required int outputWidth,
+    required int outputHeight,
+    required bool maintainAspectRatio,
+  });
 }

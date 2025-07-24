@@ -39,10 +39,7 @@ final class VideoPreviewAndroidApi extends VideoPreviewPlatformApi {
 
   @override
   void loadFilterFile(int viewId, String filePath) {
-    // TODO: Implement this function.
-    //
-    // _getMethodChannel(viewId)
-    //     ?.invokeMethod('loadFilterFile', {'filePath': filePath});
+    ApiVideoPreview.loadFilterFile(viewId, filePath.toJString());
   }
 
   @override
@@ -72,7 +69,61 @@ final class VideoPreviewAndroidApi extends VideoPreviewPlatformApi {
       IntegerValueCallback.implement(_ProgressCallback.instance),
     );
   }
+
+  @override
+  Future<String> exportVideo({
+    required int viewId,
+    required String videoPath,
+    String? filterPath,
+    required String outputPath,
+    required int outputWidth,
+    required int outputHeight,
+    required bool maintainAspectRatio,
+  }) async {
+    return "";
+    // final completer = Completer<String>();
+    // final exportId = DateTime.now().millisecondsSinceEpoch;
+    // _exportCompleters[exportId] = completer;
+    //
+    // // Create callback for export completion
+    // final callback = StringValueCallback.implement(_ExportCallback(exportId));
+    //
+    // ApiVideoPreview.exportVideo(
+    //   viewId,
+    //   videoPath.toJString(),
+    //   filterPath?.toJString(),
+    //   outputPath.toJString(),
+    //   outputWidth,
+    //   outputHeight,
+    //   maintainAspectRatio,
+    //   exportId,
+    //   callback,
+    // );
+    //
+    // return completer.future;
+  }
 }
+
+final _exportCompleters = <int, Completer<String>>{};
+
+// final class _ExportCallback with $StringValueCallback {
+//   final int exportId;
+//
+//   _ExportCallback(this.exportId);
+//
+//   @override
+//   void invoke(int id, JString? result) {
+//     final completer = _exportCompleters.remove(exportId);
+//     if (completer != null) {
+//       if (result != null) {
+//         completer.complete(result.toDartString());
+//       } else {
+//         completer.completeError(Exception('Export failed'));
+//       }
+//     }
+//     result?.release();
+//   }
+// }
 
 final _durationStreamControllerRegister = <int, StreamController<Duration>>{};
 final _progressStreamControllerRegister = <int, StreamController<Duration>>{};

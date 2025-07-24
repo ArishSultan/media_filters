@@ -1,14 +1,20 @@
 package dev.arish.media_filters
 
 import androidx.annotation.Keep
+import androidx.media3.common.util.UnstableApi
 
 fun interface IntegerValueCallback {
   fun invoke(viewId: Int, state: Long)
 }
 
+fun interface StringValueCallback {
+  fun invoke(viewId: Int, result: String?)
+}
+
 @Keep
 object ApiVideoPreview {
   @JvmStatic
+  @UnstableApi
   fun loadVideoFile(viewId: Int, path: String) {
     val preview = VideoPreviewManager.getInstance().getPreview(viewId)?.loadVideoFile(path)
   }
@@ -45,6 +51,41 @@ object ApiVideoPreview {
   @JvmStatic
   fun removeStateCallbacks(viewId: Int) {
     VideoPreviewManager.getInstance().getPreview(viewId)?.removeStateCallbacks()
+  }
+
+  @JvmStatic
+  @UnstableApi
+  fun loadFilterFile(viewId: Int, path: String) {
+    VideoPreviewManager.getInstance().getPreview(viewId)?.loadFilterFile(path)
+  }
+
+  @JvmStatic
+  fun exportVideo(
+    viewId: Int,
+    videoPath: String,
+    filterPath: String?,
+    outputPath: String,
+    outputWidth: Int,
+    outputHeight: Int,
+    maintainAspectRatio: Boolean,
+    exportId: Int,
+    callback: StringValueCallback
+  ) {
+    val preview = VideoPreviewManager.getInstance().getPreview(viewId)
+    if (preview != null) {
+      preview.exportVideo(
+        videoPath,
+        filterPath,
+        outputPath,
+        outputWidth,
+        outputHeight,
+        maintainAspectRatio,
+        exportId,
+        callback
+      )
+    } else {
+      callback.invoke(exportId, null)
+    }
   }
 }
 

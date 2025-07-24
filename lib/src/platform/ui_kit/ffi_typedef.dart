@@ -37,6 +37,30 @@ typedef VPSetStateCallbacksFFI = Int Function(
 typedef VPRemoveStateCallbacks = int Function(int);
 typedef VPRemoveStateCallbacksFFI = Int Function(Int);
 
+typedef VPExportCompleteCallbackFFI = Void Function(Int, Pointer<Utf8>, Int);
+typedef VPExportVideo = int Function(
+  int,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  int,
+  int,
+  int,
+  int,
+  Pointer<NativeFunction<VPExportCompleteCallbackFFI>>,
+);
+typedef VPExportVideoFFI = Int Function(
+  Int,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Int,
+  Int,
+  Int,
+  Int,
+  Pointer<NativeFunction<VPExportCompleteCallbackFFI>>,
+);
+
 // typedef VPSetStateCallback = void Function(
 //   int,
 //   Pointer<NativeFunction<_VPStateCallbackFFI>>,
