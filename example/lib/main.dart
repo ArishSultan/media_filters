@@ -96,10 +96,11 @@ class _MyAppState extends State<MyApp> {
             StreamBuilder(
               stream: controller.duration,
               builder: (context, snapshot) {
+                print('duration: ${snapshot.data}');
                 if (!snapshot.hasData) {
                   return CircularProgressIndicator();
                 }
-
+                //
                 final duration = snapshot.data!;
 
                 return StreamBuilder(
@@ -115,8 +116,8 @@ class _MyAppState extends State<MyApp> {
                       divisions: 100,
                       year2023:false,
                       min: 0,
-                      max: duration.inMicroseconds.toDouble(),
-                      value: progress.inMicroseconds.toDouble(),
+                      max: duration.inMilliseconds.toDouble(),
+                      value: progress.inMilliseconds.toDouble(),
                       onChanged: (val) {
                         controller.seekTo(val.round());
                       },

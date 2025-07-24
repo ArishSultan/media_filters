@@ -15,16 +15,13 @@ final class VideoPreviewDarwinApi extends VideoPreviewPlatformApi {
   }
 
   @override
-  Stream<VideoPreviewState> get state =>
-      _stateStreamController.stream;
+  Stream<VideoPreviewState> get state => _stateStreamController.stream;
 
   @override
-  Stream<Duration> get progress =>
-      _progressStreamController.stream;
+  Stream<Duration> get progress => _progressStreamController.stream;
 
   @override
-  Stream<Duration> get duration =>
-      _durationStreamController.stream;
+  Stream<Duration> get duration => _durationStreamController.stream;
 
   @override
   void pause(int viewId) {
@@ -59,7 +56,8 @@ final class VideoPreviewDarwinApi extends VideoPreviewPlatformApi {
     // return result;
   }
 
-  final _stateStreamController = StreamController<VideoPreviewState>.broadcast();
+  final _stateStreamController =
+      StreamController<VideoPreviewState>.broadcast();
   final _progressStreamController = StreamController<Duration>.broadcast();
   final _durationStreamController = StreamController<Duration>.broadcast();
 
