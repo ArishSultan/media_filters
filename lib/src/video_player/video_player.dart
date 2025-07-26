@@ -131,6 +131,41 @@ final class VideoPlayerController extends ChangeNotifier {
     api.loadNetworkVideo(viewId, url);
   }
 
+  ///
+  void setExposure(double exposure) {
+    validateIsBound();
+
+    api.setExposure(viewId, exposure);
+  }
+
+  ///
+  void setContrast(double contrast) {
+    validateIsBound();
+
+    api.setContrast(viewId, contrast);
+  }
+
+  ///
+  void setSaturation(double saturation) {
+    validateIsBound();
+
+    api.setSaturation(viewId, saturation);
+  }
+
+  ///
+  void setTemperature(double temperature) {
+    validateIsBound();
+
+    api.setTemperature(viewId, temperature);
+  }
+
+  ///
+  void setTint(double tint) {
+    validateIsBound();
+
+    api.setTint(viewId, tint);
+  }
+
   /// Exports a video with applied filter to a specified location.
   ///
   /// [videoPath] Path to the input video file.

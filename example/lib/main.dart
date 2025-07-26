@@ -31,6 +31,12 @@ class _MyAppState extends State<MyApp> {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {}
 
+  var tint = 0;
+  var exposure = 0.0;
+  var contrast = 1.0;
+  var saturation = 1.0;
+  var temperature = 6500;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -96,7 +102,6 @@ class _MyAppState extends State<MyApp> {
             StreamBuilder(
               stream: controller.duration,
               builder: (context, snapshot) {
-                print('duration: ${snapshot.data}');
                 if (!snapshot.hasData) {
                   return CircularProgressIndicator();
                 }
@@ -106,7 +111,6 @@ class _MyAppState extends State<MyApp> {
                 return StreamBuilder(
                   stream: controller.progress,
                   builder: (context, snapshot) {
-                    print(snapshot.data);
                     if (!snapshot.hasData) {
                       return CircularProgressIndicator();
                     }
@@ -121,8 +125,14 @@ class _MyAppState extends State<MyApp> {
                           min: 0,
                           max: duration.inMilliseconds.toDouble(),
                           value: progress.inMilliseconds.toDouble(),
+                          onChangeStart: (_) {
+                            controller.pause();
+                          },
                           onChanged: (val) {
                             controller.seekTo(val.round());
+                          },
+                          onChangeEnd: (_) {
+                            controller.play();
                           },
                         ),
 
@@ -137,6 +147,81 @@ class _MyAppState extends State<MyApp> {
                     );
                   },
                 );
+              },
+            ),
+
+            // Exposure
+            Slider(
+              min: -10.0,
+              max: 10.0,
+              value: exposure,
+              year2023: false,
+              onChanged: (val) {
+                exposure = val;
+                setState(() {});
+              },
+              onChangeEnd: (val) {
+                controller.setExposure(val);
+              },
+            ),
+
+            // Contrast
+            Slider(
+              min: 0.0,
+              max: 4.0,
+              value: contrast,
+              year2023: false,
+              onChanged: (val) {
+                contrast = val;
+                setState(() {});
+              },
+              onChangeEnd: (val) {
+                controller.setContrast(val);
+              },
+            ),
+
+            // Saturation
+            Slider(
+              min: 0.0,
+              max: 2.0,
+              value: saturation,
+              year2023: false,
+              onChanged: (val) {
+                saturation = val;
+                setState(() {});
+              },
+              onChangeEnd: (val) {
+                controller.setSaturation(val);
+              },
+            ),
+
+            // Temperature
+            Slider(
+              min: 2000,
+              max: 10000,
+              value: temperature.toDouble(),
+              year2023: false,
+              onChanged: (val) {
+                temperature = val.round();
+                setState(() {});
+              },
+              onChangeEnd: (val) {
+                controller.setTemperature(val);
+              },
+            ),
+
+            // Tint
+            Slider(
+              min: -200.0,
+              max: 200.0,
+              value: tint.toDouble(),
+              year2023: false,
+              onChanged: (val) {
+                tint = val.round();
+                setState(() {});
+              },
+              onChangeEnd: (val) {
+                controller.setTint(val);
               },
             ),
           ],

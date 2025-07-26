@@ -103,3 +103,36 @@ public func vpRemoveCallbacks(playerId: Int) {
     progressCallback: nil,
   )
 }
+
+
+// MARK: - Filters
+
+@_cdecl("vpLoadLutFilter")
+public func vpLoadLutFilter(playerId: Int, resource: UnsafePointer<CChar>) {
+  VideoPlayersManager.get(playerId)?.loadLutFilter(String(cString: resource))
+}
+
+@_cdecl("vpSetExposure")
+public func vpSetExposure(playerId: Int, value: Float) {
+  VideoPlayersManager.get(playerId)?.setExposure(value)
+}
+
+@_cdecl("vpSetContrast")
+public func vpSetContrast(playerId: Int, value: Float) {
+  VideoPlayersManager.get(playerId)?.setContrast(value)
+}
+
+@_cdecl("vpSetSaturation")
+public func vpSetSaturation(playerId: Int, value: Float) {
+  VideoPlayersManager.get(playerId)?.setSaturation(value)
+}
+
+@_cdecl("vpSetTemperature")
+public func vpSetTemperature(playerId: Int, value: Float) {
+  VideoPlayersManager.get(playerId)?.setTemperature(value)
+}
+
+@_cdecl("vpSetTint")
+public func vpSetTint(playerId: Int, value: Float) {
+  VideoPlayersManager.get(playerId)?.setTint(value)
+}

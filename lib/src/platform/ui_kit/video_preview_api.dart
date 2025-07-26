@@ -40,11 +40,9 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
 
   @override
   void loadFilterFile(int viewId, String filePath) {
-    // final filePathPtr = filePath.toNativeUtf8();
-    // DarwinFFI.vpLoadLutFile(viewId, filePathPtr);
-    // malloc.free(filePathPtr);
-
-    // return result;
+    final filePathPtr = filePath.toNativeUtf8();
+    DarwinFFI.vpLoadLutFilter(viewId, filePathPtr);
+    malloc.free(filePathPtr);
   }
 
   @override
@@ -68,8 +66,7 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
     malloc.free(locatorPtr);
   }
 
-  final _stateStreamController =
-      StreamController<VideoPlayerState>.broadcast();
+  final _stateStreamController = StreamController<VideoPlayerState>.broadcast();
   final _progressStreamController = StreamController<Duration>.broadcast();
   final _durationStreamController = StreamController<Duration>.broadcast();
 
@@ -94,6 +91,36 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
       _onDurationCallbackPtr.nativeFunction,
       _onProgressCallbackPtr.nativeFunction,
     );
+  }
+
+  ///
+  @override
+  void setExposure(int viewId, double exposure) {
+    DarwinFFI.vpSetExposure(viewId, exposure);
+  }
+
+  ///
+  @override
+  void setContrast(int viewId, double contrast) {
+    DarwinFFI.vpSetContrast(viewId, contrast);
+  }
+
+  ///
+  @override
+  void setSaturation(int viewId, double saturation) {
+    DarwinFFI.vpSetSaturation(viewId, saturation);
+  }
+
+  ///
+  @override
+  void setTemperature(int viewId, double temperature) {
+    DarwinFFI.vpSetTemperature(viewId, temperature);
+  }
+
+  ///
+  @override
+  void setTint(int viewId, double tint) {
+    DarwinFFI.vpSetTint(viewId, tint);
   }
 
   @override
@@ -158,10 +185,10 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
     _onDurationCallback,
   );
 
-  // static final _onExportCompletePtr =
-  //     NativeCallable<VPExportCompleteCallbackFFI>.listener(
-  //   _onExportComplete,
-  // );
+// static final _onExportCompletePtr =
+//     NativeCallable<VPExportCompleteCallbackFFI>.listener(
+//   _onExportComplete,
+// );
 }
 
 // final _exportCompleters = <int, Completer<String>>{};

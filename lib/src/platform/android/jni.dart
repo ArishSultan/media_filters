@@ -260,6 +260,135 @@ class ApiVideoPreview extends jni$_.JObject {
         .check();
   }
 
+  static final _id_setExposure = _class.staticMethodId(
+    r'setExposure',
+    r'(IF)V',
+  );
+
+  static final _setExposure = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setExposure(int i, float f)`
+  static void setExposure(
+    int i,
+    double f,
+  ) {
+    _setExposure(_class.reference.pointer,
+            _id_setExposure as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setContrast = _class.staticMethodId(
+    r'setContrast',
+    r'(IF)V',
+  );
+
+  static final _setContrast = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setContrast(int i, float f)`
+  static void setContrast(
+    int i,
+    double f,
+  ) {
+    _setContrast(_class.reference.pointer,
+            _id_setContrast as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setSaturation = _class.staticMethodId(
+    r'setSaturation',
+    r'(IF)V',
+  );
+
+  static final _setSaturation = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setSaturation(int i, float f)`
+  static void setSaturation(
+    int i,
+    double f,
+  ) {
+    _setSaturation(_class.reference.pointer,
+            _id_setSaturation as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setTemperature = _class.staticMethodId(
+    r'setTemperature',
+    r'(IF)V',
+  );
+
+  static final _setTemperature = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setTemperature(int i, float f)`
+  static void setTemperature(
+    int i,
+    double f,
+  ) {
+    _setTemperature(_class.reference.pointer,
+            _id_setTemperature as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setTint = _class.staticMethodId(
+    r'setTint',
+    r'(IF)V',
+  );
+
+  static final _setTint = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setTint(int i, float f)`
+  static void setTint(
+    int i,
+    double f,
+  ) {
+    _setTint(_class.reference.pointer, _id_setTint as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
   static final _id_exportVideo = _class.staticMethodId(
     r'exportVideo',
     r'(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;IIZI)V',

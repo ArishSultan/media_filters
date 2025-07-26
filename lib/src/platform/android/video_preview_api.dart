@@ -17,8 +17,7 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
   @override
   Stream<Duration> get duration => _durationStreamController.stream;
 
-  final _stateStreamController =
-      StreamController<VideoPlayerState>.broadcast();
+  final _stateStreamController = StreamController<VideoPlayerState>.broadcast();
   final _progressStreamController = StreamController<Duration>.broadcast();
   final _durationStreamController = StreamController<Duration>.broadcast();
 
@@ -43,8 +42,18 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
   }
 
   @override
-  void loadVideoFile(int viewId, String filePath) {
-    ApiVideoPreview.loadVideoFile(viewId, filePath.toJString());
+  void loadAssetVideo(int viewId, String locator) {
+    // TODO: implement loadAssetVideo
+  }
+
+  @override
+  void loadFileVideo(int viewId, String path) {
+    ApiVideoPreview.loadVideoFile(viewId, path.toJString());
+  }
+
+  @override
+  void loadNetworkVideo(int viewId, String url) {
+    // TODO: implement loadNetworkVideo
   }
 
   @override
@@ -68,6 +77,36 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
       LongValueCallback.implement(_DurationCallback.instance),
       LongValueCallback.implement(_ProgressCallback.instance),
     );
+  }
+
+  ///
+  @override
+  void setExposure(int viewId, double exposure) {
+    ApiVideoPreview.setExposure(viewId, exposure);
+  }
+
+  ///
+  @override
+  void setContrast(int viewId, double contrast) {
+    ApiVideoPreview.setContrast(viewId, contrast);
+  }
+
+  ///
+  @override
+  void setSaturation(int viewId, double saturation) {
+    ApiVideoPreview.setSaturation(viewId, saturation);
+  }
+
+  ///
+  @override
+  void setTemperature(int viewId, double temperature) {
+    ApiVideoPreview.setTemperature(viewId, temperature);
+  }
+
+  ///
+  @override
+  void setTint(int viewId, double tint) {
+    ApiVideoPreview.setTint(viewId, tint);
   }
 
   @override
@@ -101,21 +140,6 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
     // );
     //
     // return completer.future;
-  }
-
-  @override
-  void loadAssetVideo(int viewId, String locator) {
-    // TODO: implement loadAssetVideo
-  }
-
-  @override
-  void loadFileVideo(int viewId, String path) {
-    // TODO: implement loadFileVideo
-  }
-
-  @override
-  void loadNetworkVideo(int viewId, String url) {
-    // TODO: implement loadNetworkVideo
   }
 }
 

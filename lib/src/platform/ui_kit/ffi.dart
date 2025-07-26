@@ -19,9 +19,9 @@ abstract final class DarwinFFI {
 
     vpSeek = lib.lookupFunction<VPSeekFFI, VPSeek>('vpSeek');
 
-    // vpLoadLutFile = lib.lookupFunction<VPLoadResourceStrFFI, VPLoadResourceStr>(
-    //   'vpLoadFilterFile',
-    // );
+    vpLoadLutFilter = lib.lookupFunction<VPLoadLutFilterFFI, VPLoadLutFilter>(
+      'vpLoadLutFilter',
+    );
 
     vpLoadVideo = lib.lookupFunction<VPLoadVideoFFI, VPLoadVideo>(
       'vpLoadVideo',
@@ -35,6 +35,16 @@ abstract final class DarwinFFI {
       'vpRemoveCallbacks',
     );
 
+    vpSetTint = lib.lookupFunction<VPFilterFFI, VPFilter>('vpSetTint');
+    vpSetExposure = lib.lookupFunction<VPFilterFFI, VPFilter>('vpSetExposure');
+    vpSetContrast = lib.lookupFunction<VPFilterFFI, VPFilter>('vpSetContrast');
+    vpSetSaturation = lib.lookupFunction<VPFilterFFI, VPFilter>(
+      'vpSetSaturation',
+    );
+    vpSetTemperature = lib.lookupFunction<VPFilterFFI, VPFilter>(
+      'vpSetTemperature',
+    );
+
     // vpExportVideo = lib.lookupFunction<VPExportVideoFFI, VPExportVideo>(
     //   'vpExportVideo',
     // );
@@ -46,11 +56,17 @@ abstract final class DarwinFFI {
   static late final VPTrigger vpPause;
 
   static late final VPSeek vpSeek;
-  // static late final VPLoadResourceStr vpLoadLutFile;
   static late final VPLoadVideo vpLoadVideo;
+  static late final VPLoadLutFilter vpLoadLutFilter;
 
   static late final VPTrigger vpRemoveStateCallbacks;
   static late final VPSetCallbacks vpSetStateCallbacks;
 
+  // static late final VPLoadResourceStr vpLoadLutFile;
+  static late final VPFilter vpSetExposure;
+  static late final VPFilter vpSetContrast;
+  static late final VPFilter vpSetSaturation;
+  static late final VPFilter vpSetTemperature;
+  static late final VPFilter vpSetTint;
 // static late final VPExportVideo vpExportVideo;
 }

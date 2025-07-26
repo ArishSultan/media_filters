@@ -54,6 +54,21 @@ abstract class VideoPlayerPlatformApi {
   ///
   void removeStateCallbacks(int viewId);
 
+  ///
+  void setExposure(int viewId, double exposure);
+
+  ///
+  void setContrast(int viewId, double contrast);
+
+  ///
+  void setSaturation(int viewId, double saturation);
+
+  ///
+  void setTemperature(int viewId, double temperature);
+
+  ///
+  void setTint(int viewId, double tint);
+
   /// Exports a video with applied filter to a specified location.
   ///
   /// [viewId] The unique identifier of the native view.

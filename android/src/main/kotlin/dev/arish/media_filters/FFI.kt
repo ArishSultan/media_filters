@@ -64,6 +64,36 @@ object ApiVideoPreview {
   }
 
   @JvmStatic
+  @UnstableApi
+  fun setExposure(viewId: Int, exposure: Float) {
+    VideoPlayersManager.getPlayer(viewId)?.setExposure(exposure)
+  }
+
+  @JvmStatic
+  @UnstableApi
+  fun setContrast(viewId: Int, contrast: Float) {
+    VideoPlayersManager.getPlayer(viewId)?.setContrast(contrast)
+  }
+
+  @JvmStatic
+  @UnstableApi
+  fun setSaturation(viewId: Int, saturation: Float) {
+    VideoPlayersManager.getPlayer(viewId)?.setSaturation(saturation)
+  }
+
+  @JvmStatic
+  @UnstableApi
+  fun setTemperature(viewId: Int, temperature: Float) {
+    VideoPlayersManager.getPlayer(viewId)?.setTemperature(temperature)
+  }
+
+  @JvmStatic
+  @UnstableApi
+  fun setTint(viewId: Int, tint: Float) {
+    VideoPlayersManager.getPlayer(viewId)?.setTint(tint)
+  }
+
+  @JvmStatic
   fun exportVideo(
     viewId: Int,
     videoPath: String,
