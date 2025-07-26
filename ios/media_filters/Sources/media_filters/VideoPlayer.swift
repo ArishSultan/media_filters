@@ -123,7 +123,7 @@ public final class VideoPlayer: NSObject {
   /// This method performs a full cleanup of any existing media before loading the new one.
   /// It sets up the necessary player items, observers, and loads the video's duration.
   /// - Parameter url: The `URL` of the video file to load.
-  @MainActor public func loadVideo(from url: URL) {
+  public func loadVideo(from url: URL) {
     cleanup() // Clean up previous player state before loading new media.
     
     let asset = AVAsset(url: url)

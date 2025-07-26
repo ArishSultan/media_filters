@@ -21,7 +21,7 @@ public enum VideoResourceType: Int {
 ///   - resource: A C-string representing the path, URL, or asset name.
 ///   - resourceType: The type of the resource, defined by `VideoResourceType`.
 @_cdecl("vpLoadVideo")
-@MainActor public func vpLoadVideo(playerId: Int, resource: UnsafePointer<CChar>, resourceType: Int) {
+public func vpLoadVideo(playerId: Int, resource: UnsafePointer<CChar>, resourceType: Int) {
   guard let player = VideoPlayersManager.get(playerId) else { return }
   
   let resourceStr = String(cString: resource)
