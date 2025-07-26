@@ -13,3 +13,4 @@ output:
 classes:
   - 'dev.arish.media_filters.ApiVideoPreview'
   - 'dev.arish.media_filters.IntegerValueCallback'
+  - 'dev.arish.media_filters.LongValueCallback'

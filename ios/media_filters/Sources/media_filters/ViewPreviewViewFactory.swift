@@ -14,7 +14,7 @@ class VideoPreviewViewFactory: NSObject, FlutterPlatformViewFactory {
         viewIdentifier viewId: Int64,
         arguments args: Any?
     ) -> FlutterPlatformView {
-        return FLNativeView(
+        return VideoPlayerView(
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
@@ -27,7 +27,7 @@ class VideoPreviewViewFactory: NSObject, FlutterPlatformViewFactory {
     }
 }
 
-class FLNativeView: NSObject, FlutterPlatformView {
+class VideoPlayerView: NSObject, FlutterPlatformView {
     private var _view: UIView
     private var _viewId: Int = -1
 
@@ -37,30 +37,29 @@ class FLNativeView: NSObject, FlutterPlatformView {
         arguments args: Any?,
         binaryMessenger messenger: FlutterBinaryMessenger?
     ) {
-        _view = VidePreviewUIView()
+        _view = VideoPlayerUIView()
         _viewId = Int(viewId)
         super.init()
 
-        createNativeView(view: _view, viewId: Int(viewId))
+        createNativeView(view: _view)
     }
 
     func view() -> UIView {
         return _view
     }
 
-    func createNativeView(view: UIView, viewId: Int) {
-        let preview = VideoPreviewManager.instance.createPreview(viewId: viewId)
-        preview.attachToView(view)
+    func createNativeView(view: UIView) {
+        VideoPlayersManager.create(_viewId).attachToView(view)
     }
     
     deinit {
         if (_viewId > -1) {
-            VideoPreviewManager.instance.destroyPreview(viewId: _viewId)
+            VideoPlayersManager.remove(_viewId)
         }
     }
 }
 
-class VidePreviewUIView: UIView {
+class VideoPlayerUIView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews() // It's good practice to call super
 

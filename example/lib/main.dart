@@ -15,7 +15,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final controller = VideoPreviewController();
+  final controller = VideoPlayerController();
 
   var shouldShow = false;
 
@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
                 );
 
                 if (file != null) {
-                  controller.loadVideoFile(file.paths[0]!);
+                  controller.loadFileVideo(file.paths[0]!);
 
                   // Future.delayed(Duration(seconds: 2), () {
                   //   shouldShow = true;
@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> {
             ),
             AspectRatio(
               aspectRatio: 16 / 9,
-              child: VideoPreview(controller: controller),
+              child: VideoPlayer(controller: controller),
             ),
 
             StreamBuilder(
@@ -106,68 +106,39 @@ class _MyAppState extends State<MyApp> {
                 return StreamBuilder(
                   stream: controller.progress,
                   builder: (context, snapshot) {
+                    print(snapshot.data);
                     if (!snapshot.hasData) {
                       return CircularProgressIndicator();
                     }
 
                     final progress = snapshot.data!;
 
-                    return Slider(
-                      divisions: 100,
-                      year2023:false,
-                      min: 0,
-                      max: duration.inMilliseconds.toDouble(),
-                      value: progress.inMilliseconds.toDouble(),
-                      onChanged: (val) {
-                        controller.seekTo(val.round());
-                      },
+                    return Column(
+                      children: [
+                        Slider(
+                          divisions: 100,
+                          year2023: false,
+                          min: 0,
+                          max: duration.inMilliseconds.toDouble(),
+                          value: progress.inMilliseconds.toDouble(),
+                          onChanged: (val) {
+                            controller.seekTo(val.round());
+                          },
+                        ),
+
+                        Row(
+                          children: [
+                            Text(progress.toString()),
+                            Spacer(),
+                            Text(duration.toString()),
+                          ],
+                        ),
+                      ],
                     );
                   },
                 );
               },
             ),
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: StreamBuilder(
-            //         stream: controller.state,
-            //         builder: (context, snapshot) {
-            //           if (snapshot.hasData) {
-            //             return Text(snapshot.data!.toString());
-            //           }
-            //
-            //           return CircularProgressIndicator();
-            //         },
-            //       ),
-            //     ),
-            //
-            //     Expanded(
-            //       child: StreamBuilder(
-            //         stream: controller.progress,
-            //         builder: (context, snapshot) {
-            //           if (snapshot.hasData) {
-            //             return Text(snapshot.data!.toString());
-            //           }
-            //
-            //           return CircularProgressIndicator();
-            //         },
-            //       ),
-            //     ),
-            //
-            //     Expanded(
-            //       child: StreamBuilder(
-            //         stream: controller.duration,
-            //         builder: (context, snapshot) {
-            //           if (snapshot.hasData) {
-            //             return Text(snapshot.data!.toString());
-            //           }
-            //
-            //           return CircularProgressIndicator();
-            //         },
-            //       ),
-            //     ),
-            //   ],
-            // ),
           ],
         ),
       ),

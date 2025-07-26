@@ -19,27 +19,25 @@ abstract final class DarwinFFI {
 
     vpSeek = lib.lookupFunction<VPSeekFFI, VPSeek>('vpSeek');
 
-    vpLoadLutFile = lib.lookupFunction<VPLoadResourceStrFFI, VPLoadResourceStr>(
-      'vpLoadFilterFile',
-    );
-    vpLoadVideoFile =
-        lib.lookupFunction<VPLoadResourceStrFFI, VPLoadResourceStr>(
-      'vpLoadVideoFile',
+    // vpLoadLutFile = lib.lookupFunction<VPLoadResourceStrFFI, VPLoadResourceStr>(
+    //   'vpLoadFilterFile',
+    // );
+
+    vpLoadVideo = lib.lookupFunction<VPLoadVideoFFI, VPLoadVideo>(
+      'vpLoadVideo',
     );
 
-    vpSetStateCallbacks =
-        lib.lookupFunction<VPSetStateCallbacksFFI, VPSetStateCallbacks>(
-      'vpSetStateCallback',
+    vpSetStateCallbacks = lib.lookupFunction<VPSetCallbacksFFI, VPSetCallbacks>(
+      'vpSetCallbacks',
     );
 
-    vpRemoveStateCallbacks =
-        lib.lookupFunction<VPRemoveStateCallbacksFFI, VPRemoveStateCallbacks>(
-      'vpRemoveStateCallback',
+    vpRemoveStateCallbacks = lib.lookupFunction<VPTriggerFFI, VPTrigger>(
+      'vpRemoveCallbacks',
     );
 
-    vpExportVideo = lib.lookupFunction<VPExportVideoFFI, VPExportVideo>(
-      'vpExportVideo',
-    );
+    // vpExportVideo = lib.lookupFunction<VPExportVideoFFI, VPExportVideo>(
+    //   'vpExportVideo',
+    // );
 
     _initialized = true;
   }
@@ -48,11 +46,11 @@ abstract final class DarwinFFI {
   static late final VPTrigger vpPause;
 
   static late final VPSeek vpSeek;
-  static late final VPLoadResourceStr vpLoadLutFile;
-  static late final VPLoadResourceStr vpLoadVideoFile;
+  // static late final VPLoadResourceStr vpLoadLutFile;
+  static late final VPLoadVideo vpLoadVideo;
 
-  static late final VPSetStateCallbacks vpSetStateCallbacks;
-  static late final VPRemoveStateCallbacks vpRemoveStateCallbacks;
+  static late final VPTrigger vpRemoveStateCallbacks;
+  static late final VPSetCallbacks vpSetStateCallbacks;
 
-  static late final VPExportVideo vpExportVideo;
+// static late final VPExportVideo vpExportVideo;
 }

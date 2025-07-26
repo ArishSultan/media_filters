@@ -2,36 +2,30 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 
-typedef VPCreate = int Function();
-typedef VPCreateFFI = Int Function();
-
-typedef VPDestroy = void Function(int);
-typedef VPDestroyFFI = Void Function(Int);
-
 typedef VPTrigger = void Function(int);
 typedef VPTriggerFFI = Void Function(Int);
 
 typedef VPSeek = void Function(int, int);
 typedef VPSeekFFI = Void Function(Int, Int64);
 
-typedef VPLoadResourceStr = int Function(int, Pointer<Utf8>);
-typedef VPLoadResourceStrFFI = Int Function(Int, Pointer<Utf8>);
+typedef VPLoadVideo = int Function(int, Pointer<Utf8>, int);
+typedef VPLoadVideoFFI = Int Function(Int, Pointer<Utf8>, Int);
 
-typedef VPStateCallbackFFI = Void Function(Int, Int);
-typedef VPProgressCallbackFFI = Void Function(Int, Double);
-typedef VPDurationCallbackFFI = Void Function(Int, Double);
-typedef VPSetStateCallbacks = int Function(
+typedef LongValueCallbackFFI = Void Function(Int, Int64);
+typedef IntegerValueCallbackFFI = Void Function(Int, Int);
+
+typedef VPSetCallbacks = int Function(
   int,
-  Pointer<NativeFunction<VPStateCallbackFFI>>,
-  Pointer<NativeFunction<VPProgressCallbackFFI>>,
-  Pointer<NativeFunction<VPDurationCallbackFFI>>,
+  Pointer<NativeFunction<IntegerValueCallbackFFI>>,
+  Pointer<NativeFunction<LongValueCallbackFFI>>,
+  Pointer<NativeFunction<LongValueCallbackFFI>>,
 );
 
-typedef VPSetStateCallbacksFFI = Int Function(
+typedef VPSetCallbacksFFI = Int Function(
   Int,
-  Pointer<NativeFunction<VPStateCallbackFFI>>,
-  Pointer<NativeFunction<VPProgressCallbackFFI>>,
-  Pointer<NativeFunction<VPDurationCallbackFFI>>,
+  Pointer<NativeFunction<IntegerValueCallbackFFI>>,
+  Pointer<NativeFunction<LongValueCallbackFFI>>,
+  Pointer<NativeFunction<LongValueCallbackFFI>>,
 );
 
 typedef VPRemoveStateCallbacks = int Function(int);

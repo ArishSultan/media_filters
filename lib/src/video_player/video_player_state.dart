@@ -1,5 +1,5 @@
 ///
-enum VideoPreviewState {
+enum VideoPlayerState {
   ///
   stopped,
 

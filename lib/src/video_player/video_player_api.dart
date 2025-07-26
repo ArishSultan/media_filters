@@ -1,4 +1,4 @@
-import 'video_preview_state.dart';
+import 'video_player_state.dart';
 
 /// Defines the interface for platform-specific video preview implementations.
 ///
@@ -10,9 +10,9 @@ import 'video_preview_state.dart';
 /// Implementations of this class are responsible for forwarding commands to the
 /// corresponding native video player instance using a platform channel or a
 /// similar mechanism.
-abstract class VideoPreviewPlatformApi {
+abstract class VideoPlayerPlatformApi {
   ///
-  Stream<VideoPreviewState> get state;
+  Stream<VideoPlayerState> get state;
 
   ///
   Stream<Duration> get progress;
@@ -37,7 +37,13 @@ abstract class VideoPreviewPlatformApi {
   void seekTo(int viewId, int value);
 
   ///
-  void loadVideoFile(int viewId, String filePath);
+  void loadAssetVideo(int viewId, String locator);
+
+  ///
+  void loadFileVideo(int viewId, String path);
+
+  ///
+  void loadNetworkVideo(int viewId, String url);
 
   ///
   void loadFilterFile(int viewId, String filePath);

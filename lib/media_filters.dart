@@ -1,1 +1,1 @@
-export 'src/video_preview/video_preview.dart';
+export 'src/video_player/video_player.dart';

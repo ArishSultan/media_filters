@@ -162,7 +162,7 @@ class ApiVideoPreview extends jni$_.JObject {
 
   static final _id_setStateCallbacks = _class.staticMethodId(
     r'setStateCallbacks',
-    r'(ILdev/arish/media_filters/IntegerValueCallback;Ldev/arish/media_filters/IntegerValueCallback;Ldev/arish/media_filters/IntegerValueCallback;)V',
+    r'(ILdev/arish/media_filters/IntegerValueCallback;Ldev/arish/media_filters/LongValueCallback;Ldev/arish/media_filters/LongValueCallback;)V',
   );
 
   static final _setStateCallbacks = jni$_.ProtectedJniExtensions.lookup<
@@ -186,26 +186,26 @@ class ApiVideoPreview extends jni$_.JObject {
               jni$_.Pointer<jni$_.Void>,
               jni$_.Pointer<jni$_.Void>)>();
 
-  /// from: `static public final void setStateCallbacks(int i, dev.arish.media_filters.IntegerValueCallback integerValueCallback, dev.arish.media_filters.IntegerValueCallback integerValueCallback1, dev.arish.media_filters.IntegerValueCallback integerValueCallback2)`
+  /// from: `static public final void setStateCallbacks(int i, dev.arish.media_filters.IntegerValueCallback integerValueCallback, dev.arish.media_filters.LongValueCallback longValueCallback, dev.arish.media_filters.LongValueCallback longValueCallback1)`
   static void setStateCallbacks(
     int i,
     IntegerValueCallback? integerValueCallback,
-    IntegerValueCallback? integerValueCallback1,
-    IntegerValueCallback? integerValueCallback2,
+    LongValueCallback? longValueCallback,
+    LongValueCallback? longValueCallback1,
   ) {
     final _$integerValueCallback =
         integerValueCallback?.reference ?? jni$_.jNullReference;
-    final _$integerValueCallback1 =
-        integerValueCallback1?.reference ?? jni$_.jNullReference;
-    final _$integerValueCallback2 =
-        integerValueCallback2?.reference ?? jni$_.jNullReference;
+    final _$longValueCallback =
+        longValueCallback?.reference ?? jni$_.jNullReference;
+    final _$longValueCallback1 =
+        longValueCallback1?.reference ?? jni$_.jNullReference;
     _setStateCallbacks(
             _class.reference.pointer,
             _id_setStateCallbacks as jni$_.JMethodIDPtr,
             i,
             _$integerValueCallback.pointer,
-            _$integerValueCallback1.pointer,
-            _$integerValueCallback2.pointer)
+            _$longValueCallback.pointer,
+            _$longValueCallback1.pointer)
         .check();
   }
 
@@ -262,7 +262,7 @@ class ApiVideoPreview extends jni$_.JObject {
 
   static final _id_exportVideo = _class.staticMethodId(
     r'exportVideo',
-    r'(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;IIZILdev/arish/media_filters/StringValueCallback;)V',
+    r'(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;IIZI)V',
   );
 
   static final _exportVideo = jni$_.ProtectedJniExtensions.lookup<
@@ -279,8 +279,7 @@ class ApiVideoPreview extends jni$_.JObject {
                         jni$_.Int32,
                         jni$_.Int32,
                         jni$_.Int32,
-                        jni$_.Int32,
-                        jni$_.Pointer<jni$_.Void>
+                        jni$_.Int32
                       )>)>>('globalEnv_CallStaticVoidMethod')
       .asFunction<
           jni$_.JThrowablePtr Function(
@@ -293,10 +292,9 @@ class ApiVideoPreview extends jni$_.JObject {
               int,
               int,
               int,
-              int,
-              jni$_.Pointer<jni$_.Void>)>();
+              int)>();
 
-  /// from: `static public final void exportVideo(int i, java.lang.String string, java.lang.String string1, java.lang.String string2, int i1, int i2, boolean z, int i3, dev.arish.media_filters.StringValueCallback stringValueCallback)`
+  /// from: `static public final void exportVideo(int i, java.lang.String string, java.lang.String string1, java.lang.String string2, int i1, int i2, boolean z, int i3)`
   static void exportVideo(
     int i,
     jni$_.JString string,
@@ -306,12 +304,10 @@ class ApiVideoPreview extends jni$_.JObject {
     int i2,
     bool z,
     int i3,
-    jni$_.JObject stringValueCallback,
   ) {
     final _$string = string.reference;
     final _$string1 = string1?.reference ?? jni$_.jNullReference;
     final _$string2 = string2.reference;
-    final _$stringValueCallback = stringValueCallback.reference;
     _exportVideo(
             _class.reference.pointer,
             _id_exportVideo as jni$_.JMethodIDPtr,
@@ -322,8 +318,7 @@ class ApiVideoPreview extends jni$_.JObject {
             i1,
             i2,
             z ? 1 : 0,
-            i3,
-            _$stringValueCallback.pointer)
+            i3)
         .check();
   }
 }
@@ -423,7 +418,7 @@ class IntegerValueCallback extends jni$_.JObject {
   static const type = $IntegerValueCallback$Type();
   static final _id_invoke = _class.instanceMethodId(
     r'invoke',
-    r'(IJ)V',
+    r'(II)V',
   );
 
   static final _invoke = jni$_.ProtectedJniExtensions.lookup<
@@ -431,18 +426,18 @@ class IntegerValueCallback extends jni$_.JObject {
                   jni$_.JThrowablePtr Function(
                       jni$_.Pointer<jni$_.Void>,
                       jni$_.JMethodIDPtr,
-                      jni$_.VarArgs<(jni$_.Int32, jni$_.Int64)>)>>(
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Int32)>)>>(
           'globalEnv_CallVoidMethod')
       .asFunction<
           jni$_.JThrowablePtr Function(
               jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, int)>();
 
-  /// from: `public abstract void invoke(int i, long j)`
+  /// from: `public abstract void invoke(int i, int i1)`
   void invoke(
     int i,
-    int j,
+    int i1,
   ) {
-    _invoke(reference.pointer, _id_invoke as jni$_.JMethodIDPtr, i, j).check();
+    _invoke(reference.pointer, _id_invoke as jni$_.JMethodIDPtr, i, i1).check();
   }
 
   /// Maps a specific port to the implemented interface.
@@ -475,14 +470,14 @@ class IntegerValueCallback extends jni$_.JObject {
     try {
       final $d = $i.methodDescriptor.toDartString(releaseOriginal: true);
       final $a = $i.args;
-      if ($d == r'invoke(IJ)V') {
+      if ($d == r'invoke(II)V') {
         _$impls[$p]!.invoke(
           $a![0]!
               .as(const jni$_.JIntegerType(), releaseOriginal: true)
               .intValue(releaseOriginal: true),
           $a![1]!
-              .as(const jni$_.JLongType(), releaseOriginal: true)
-              .longValue(releaseOriginal: true),
+              .as(const jni$_.JIntegerType(), releaseOriginal: true)
+              .intValue(releaseOriginal: true),
         );
         return jni$_.nullptr;
       }
@@ -512,7 +507,7 @@ class IntegerValueCallback extends jni$_.JObject {
       $p,
       _$invokePointer,
       [
-        if ($impl.invoke$async) r'invoke(IJ)V',
+        if ($impl.invoke$async) r'invoke(II)V',
       ],
     );
     final $a = $p.sendPort.nativePort;
@@ -532,25 +527,25 @@ class IntegerValueCallback extends jni$_.JObject {
 
 abstract base mixin class $IntegerValueCallback {
   factory $IntegerValueCallback({
-    required void Function(int i, int j) invoke,
+    required void Function(int i, int i1) invoke,
     bool invoke$async,
   }) = _$IntegerValueCallback;
 
-  void invoke(int i, int j);
+  void invoke(int i, int i1);
   bool get invoke$async => false;
 }
 
 final class _$IntegerValueCallback with $IntegerValueCallback {
   _$IntegerValueCallback({
-    required void Function(int i, int j) invoke,
+    required void Function(int i, int i1) invoke,
     this.invoke$async = false,
   }) : _invoke = invoke;
 
-  final void Function(int i, int j) _invoke;
+  final void Function(int i, int i1) _invoke;
   final bool invoke$async;
 
-  void invoke(int i, int j) {
-    return _invoke(i, j);
+  void invoke(int i, int i1) {
+    return _invoke(i, i1);
   }
 }
 
@@ -628,5 +623,232 @@ final class $IntegerValueCallback$Type
   bool operator ==(Object other) {
     return other.runtimeType == ($IntegerValueCallback$Type) &&
         other is $IntegerValueCallback$Type;
+  }
+}
+
+/// from: `dev.arish.media_filters.LongValueCallback`
+class LongValueCallback extends jni$_.JObject {
+  @jni$_.internal
+  @core$_.override
+  final jni$_.JObjType<LongValueCallback> $type;
+
+  @jni$_.internal
+  LongValueCallback.fromReference(
+    jni$_.JReference reference,
+  )   : $type = type,
+        super.fromReference(reference);
+
+  static final _class =
+      jni$_.JClass.forName(r'dev/arish/media_filters/LongValueCallback');
+
+  /// The type which includes information such as the signature of this class.
+  static const nullableType = $LongValueCallback$NullableType();
+  static const type = $LongValueCallback$Type();
+  static final _id_invoke = _class.instanceMethodId(
+    r'invoke',
+    r'(IJ)V',
+  );
+
+  static final _invoke = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Int64)>)>>(
+          'globalEnv_CallVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, int)>();
+
+  /// from: `public abstract void invoke(int i, long j)`
+  void invoke(
+    int i,
+    int j,
+  ) {
+    _invoke(reference.pointer, _id_invoke as jni$_.JMethodIDPtr, i, j).check();
+  }
+
+  /// Maps a specific port to the implemented interface.
+  static final core$_.Map<int, $LongValueCallback> _$impls = {};
+  static jni$_.JObjectPtr _$invoke(
+    int port,
+    jni$_.JObjectPtr descriptor,
+    jni$_.JObjectPtr args,
+  ) {
+    return _$invokeMethod(
+      port,
+      jni$_.MethodInvocation.fromAddresses(
+        0,
+        descriptor.address,
+        args.address,
+      ),
+    );
+  }
+
+  static final jni$_.Pointer<
+          jni$_.NativeFunction<
+              jni$_.JObjectPtr Function(
+                  jni$_.Int64, jni$_.JObjectPtr, jni$_.JObjectPtr)>>
+      _$invokePointer = jni$_.Pointer.fromFunction(_$invoke);
+
+  static jni$_.Pointer<jni$_.Void> _$invokeMethod(
+    int $p,
+    jni$_.MethodInvocation $i,
+  ) {
+    try {
+      final $d = $i.methodDescriptor.toDartString(releaseOriginal: true);
+      final $a = $i.args;
+      if ($d == r'invoke(IJ)V') {
+        _$impls[$p]!.invoke(
+          $a![0]!
+              .as(const jni$_.JIntegerType(), releaseOriginal: true)
+              .intValue(releaseOriginal: true),
+          $a![1]!
+              .as(const jni$_.JLongType(), releaseOriginal: true)
+              .longValue(releaseOriginal: true),
+        );
+        return jni$_.nullptr;
+      }
+    } catch (e) {
+      return jni$_.ProtectedJniExtensions.newDartException(e);
+    }
+    return jni$_.nullptr;
+  }
+
+  static void implementIn(
+    jni$_.JImplementer implementer,
+    $LongValueCallback $impl,
+  ) {
+    late final jni$_.RawReceivePort $p;
+    $p = jni$_.RawReceivePort(($m) {
+      if ($m == null) {
+        _$impls.remove($p.sendPort.nativePort);
+        $p.close();
+        return;
+      }
+      final $i = jni$_.MethodInvocation.fromMessage($m);
+      final $r = _$invokeMethod($p.sendPort.nativePort, $i);
+      jni$_.ProtectedJniExtensions.returnResult($i.result, $r);
+    });
+    implementer.add(
+      r'dev.arish.media_filters.LongValueCallback',
+      $p,
+      _$invokePointer,
+      [
+        if ($impl.invoke$async) r'invoke(IJ)V',
+      ],
+    );
+    final $a = $p.sendPort.nativePort;
+    _$impls[$a] = $impl;
+  }
+
+  factory LongValueCallback.implement(
+    $LongValueCallback $impl,
+  ) {
+    final $i = jni$_.JImplementer();
+    implementIn($i, $impl);
+    return LongValueCallback.fromReference(
+      $i.implementReference(),
+    );
+  }
+}
+
+abstract base mixin class $LongValueCallback {
+  factory $LongValueCallback({
+    required void Function(int i, int j) invoke,
+    bool invoke$async,
+  }) = _$LongValueCallback;
+
+  void invoke(int i, int j);
+  bool get invoke$async => false;
+}
+
+final class _$LongValueCallback with $LongValueCallback {
+  _$LongValueCallback({
+    required void Function(int i, int j) invoke,
+    this.invoke$async = false,
+  }) : _invoke = invoke;
+
+  final void Function(int i, int j) _invoke;
+  final bool invoke$async;
+
+  void invoke(int i, int j) {
+    return _invoke(i, j);
+  }
+}
+
+final class $LongValueCallback$NullableType
+    extends jni$_.JObjType<LongValueCallback?> {
+  @jni$_.internal
+  const $LongValueCallback$NullableType();
+
+  @jni$_.internal
+  @core$_.override
+  String get signature => r'Ldev/arish/media_filters/LongValueCallback;';
+
+  @jni$_.internal
+  @core$_.override
+  LongValueCallback? fromReference(jni$_.JReference reference) =>
+      reference.isNull
+          ? null
+          : LongValueCallback.fromReference(
+              reference,
+            );
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType get superType => const jni$_.JObjectType();
+
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType<LongValueCallback?> get nullableType => this;
+
+  @jni$_.internal
+  @core$_.override
+  final superCount = 1;
+
+  @core$_.override
+  int get hashCode => ($LongValueCallback$NullableType).hashCode;
+
+  @core$_.override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($LongValueCallback$NullableType) &&
+        other is $LongValueCallback$NullableType;
+  }
+}
+
+final class $LongValueCallback$Type extends jni$_.JObjType<LongValueCallback> {
+  @jni$_.internal
+  const $LongValueCallback$Type();
+
+  @jni$_.internal
+  @core$_.override
+  String get signature => r'Ldev/arish/media_filters/LongValueCallback;';
+
+  @jni$_.internal
+  @core$_.override
+  LongValueCallback fromReference(jni$_.JReference reference) =>
+      LongValueCallback.fromReference(
+        reference,
+      );
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType get superType => const jni$_.JObjectType();
+
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType<LongValueCallback?> get nullableType =>
+      const $LongValueCallback$NullableType();
+
+  @jni$_.internal
+  @core$_.override
+  final superCount = 1;
+
+  @core$_.override
+  int get hashCode => ($LongValueCallback$Type).hashCode;
+
+  @core$_.override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($LongValueCallback$Type) &&
+        other is $LongValueCallback$Type;
   }
 }

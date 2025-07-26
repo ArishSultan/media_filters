@@ -4,12 +4,12 @@ import 'package:jni/jni.dart';
 
 import 'jni.dart';
 
-import '../../video_preview/video_preview_api.dart';
-import '../../video_preview/video_preview_state.dart';
+import '../../video_player/video_player_api.dart';
+import '../../video_player/video_player_state.dart';
 
-final class VideoPreviewAndroidApi extends VideoPreviewPlatformApi {
+final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
   @override
-  Stream<VideoPreviewState> get state => _stateStreamController.stream;
+  Stream<VideoPlayerState> get state => _stateStreamController.stream;
 
   @override
   Stream<Duration> get progress => _progressStreamController.stream;
@@ -18,7 +18,7 @@ final class VideoPreviewAndroidApi extends VideoPreviewPlatformApi {
   Stream<Duration> get duration => _durationStreamController.stream;
 
   final _stateStreamController =
-      StreamController<VideoPreviewState>.broadcast();
+      StreamController<VideoPlayerState>.broadcast();
   final _progressStreamController = StreamController<Duration>.broadcast();
   final _durationStreamController = StreamController<Duration>.broadcast();
 
@@ -65,8 +65,8 @@ final class VideoPreviewAndroidApi extends VideoPreviewPlatformApi {
     ApiVideoPreview.setStateCallbacks(
       viewId,
       IntegerValueCallback.implement(_StateCallback.instance),
-      IntegerValueCallback.implement(_DurationCallback.instance),
-      IntegerValueCallback.implement(_ProgressCallback.instance),
+      LongValueCallback.implement(_DurationCallback.instance),
+      LongValueCallback.implement(_ProgressCallback.instance),
     );
   }
 
@@ -102,6 +102,21 @@ final class VideoPreviewAndroidApi extends VideoPreviewPlatformApi {
     //
     // return completer.future;
   }
+
+  @override
+  void loadAssetVideo(int viewId, String locator) {
+    // TODO: implement loadAssetVideo
+  }
+
+  @override
+  void loadFileVideo(int viewId, String path) {
+    // TODO: implement loadFileVideo
+  }
+
+  @override
+  void loadNetworkVideo(int viewId, String url) {
+    // TODO: implement loadNetworkVideo
+  }
 }
 
 final _exportCompleters = <int, Completer<String>>{};
@@ -128,7 +143,7 @@ final _exportCompleters = <int, Completer<String>>{};
 final _durationStreamControllerRegister = <int, StreamController<Duration>>{};
 final _progressStreamControllerRegister = <int, StreamController<Duration>>{};
 final _stateStreamControllerRegister =
-    <int, StreamController<VideoPreviewState>>{};
+    <int, StreamController<VideoPlayerState>>{};
 
 final class _StateCallback with $IntegerValueCallback {
   static final instance = _StateCallback();
@@ -137,18 +152,18 @@ final class _StateCallback with $IntegerValueCallback {
   void invoke(int viewId, int state) {
     _stateStreamControllerRegister[viewId]?.add(
       switch (state) {
-        0 => VideoPreviewState.stopped,
-        1 => VideoPreviewState.playing,
-        2 => VideoPreviewState.paused,
-        3 => VideoPreviewState.ended,
-        4 => VideoPreviewState.error,
+        0 => VideoPlayerState.stopped,
+        1 => VideoPlayerState.playing,
+        2 => VideoPlayerState.paused,
+        3 => VideoPlayerState.ended,
+        4 => VideoPlayerState.error,
         _ => throw UnimplementedError(),
       },
     );
   }
 }
 
-final class _ProgressCallback with $IntegerValueCallback {
+final class _ProgressCallback with $LongValueCallback {
   static final instance = _ProgressCallback();
 
   @override
@@ -159,7 +174,7 @@ final class _ProgressCallback with $IntegerValueCallback {
   }
 }
 
-final class _DurationCallback with $IntegerValueCallback {
+final class _DurationCallback with $LongValueCallback {
   static final instance = _DurationCallback();
 
   @override

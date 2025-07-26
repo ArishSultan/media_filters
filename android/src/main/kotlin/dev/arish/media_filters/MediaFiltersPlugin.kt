@@ -7,8 +7,10 @@ class MediaFiltersPlugin : FlutterPlugin {
   override fun onAttachedToEngine(binding: FlutterPluginBinding) {
     binding
       .platformViewRegistry
-      .registerViewFactory("media_filters.preview", VideoPreviewViewFactory())
+      .registerViewFactory("media_filters.preview", VideoPlayerViewFactory())
   }
 
-  override fun onDetachedFromEngine(binding: FlutterPluginBinding) {}
+  override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
+    VideoPlayersManager.destroyAllPlayers()
+  }
 }

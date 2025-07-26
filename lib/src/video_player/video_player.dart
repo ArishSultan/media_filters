@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'video_preview_api.dart';
-import 'video_preview_state.dart';
+import 'video_player_api.dart';
+import 'video_player_state.dart';
 
 import '../platform/android/video_preview_api.dart';
 import '../platform/ui_kit/video_preview_api.dart';
@@ -21,12 +21,12 @@ import '../platform/ui_kit/video_preview_api.dart';
 /// typically happens when the native view is created. You can check if the
 /// controller is bound using the [isBound] property. Attempting to use a
 /// method before the controller is bound will result in an [Exception].
-final class VideoPreviewController extends ChangeNotifier {
+final class VideoPlayerController extends ChangeNotifier {
   /// Internal constructor for creating a [VideoPreviewController].
   ///
   /// This is used by the factory constructor to inject the appropriate
   /// platform-specific API implementation.
-  VideoPreviewController._(this.api);
+  VideoPlayerController._(this.api);
 
   /// Creates a [VideoPreviewController] with a platform-specific implementation.
   ///
@@ -37,10 +37,10 @@ final class VideoPreviewController extends ChangeNotifier {
   /// - For Android, it uses [VideoPreviewAndroidApi].
   ///
   /// Throws an [UnimplementedError] if the target platform is not supported.
-  factory VideoPreviewController() {
-    return VideoPreviewController._(switch (defaultTargetPlatform) {
-      TargetPlatform.iOS => VideoPreviewDarwinApi(),
-      TargetPlatform.android => VideoPreviewAndroidApi(),
+  factory VideoPlayerController() {
+    return VideoPlayerController._(switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => VideoPlayerDarwinApi(),
+      TargetPlatform.android => VideoPlayerAndroidApi(),
       _ => throw UnimplementedError(),
     });
   }
@@ -49,7 +49,7 @@ final class VideoPreviewController extends ChangeNotifier {
   ///
   /// This object handles the actual communication with the native code.
   @protected
-  final VideoPreviewPlatformApi api;
+  final VideoPlayerPlatformApi api;
 
   /// Whether the controller is currently bound to a [VideoPreview] widget.
   ///
@@ -61,7 +61,7 @@ final class VideoPreviewController extends ChangeNotifier {
   bool get isBound => _viewId != null;
 
   ///
-  Stream<VideoPreviewState> get state => api.state;
+  Stream<VideoPlayerState> get state => api.state;
 
   ///
   Stream<Duration> get progress => api.progress;
@@ -111,10 +111,24 @@ final class VideoPreviewController extends ChangeNotifier {
   }
 
   ///
-  void loadVideoFile(String filePath) {
+  void loadAssetVideo(String locator) {
     validateIsBound();
 
-    api.loadVideoFile(viewId, filePath);
+    api.loadAssetVideo(viewId, locator);
+  }
+
+  ///
+  void loadFileVideo(String filePath) {
+    validateIsBound();
+
+    api.loadFileVideo(viewId, filePath);
+  }
+
+  ///
+  void loadNetworkVideo(String url) {
+    validateIsBound();
+
+    api.loadNetworkVideo(viewId, url);
   }
 
   /// Exports a video with applied filter to a specified location.
@@ -202,16 +216,16 @@ final class VideoPreviewController extends ChangeNotifier {
   }
 }
 
-class VideoPreview extends StatefulWidget {
-  const VideoPreview({super.key, required this.controller});
+class VideoPlayer extends StatefulWidget {
+  const VideoPlayer({super.key, required this.controller});
 
-  final VideoPreviewController controller;
+  final VideoPlayerController controller;
 
   @override
-  State<VideoPreview> createState() => _VideoPreviewState();
+  State<VideoPlayer> createState() => _VideoPreviewState();
 }
 
-class _VideoPreviewState extends State<VideoPreview> {
+class _VideoPreviewState extends State<VideoPlayer> {
   @override
   Widget build(BuildContext context) {
     const kViewType = 'media_filters.preview';
