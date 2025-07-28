@@ -23,22 +23,27 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
 
   @override
   void pause(int viewId) {
-    ApiVideoPreview.pause(viewId);
+    ApiVideoPlayer.pause(viewId);
   }
 
   @override
   void play(int viewId) {
-    ApiVideoPreview.play(viewId);
+    ApiVideoPlayer.play(viewId);
   }
 
   @override
   void seekTo(int viewId, int value) {
-    ApiVideoPreview.seekTo(viewId, value);
+    ApiVideoPlayer.seekTo(viewId, value);
   }
 
   @override
   void loadFilterFile(int viewId, String filePath) {
-    ApiVideoPreview.loadFilterFile(viewId, filePath.toJString());
+    ApiVideoPlayer.loadFilterFile(viewId, filePath.toJString());
+  }
+
+  @override
+  void removeFilterFile(int viewId) {
+    ApiVideoPlayer.removeLutFilter(viewId);
   }
 
   @override
@@ -48,7 +53,7 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
 
   @override
   void loadFileVideo(int viewId, String path) {
-    ApiVideoPreview.loadVideoFile(viewId, path.toJString());
+    ApiVideoPlayer.loadVideoFile(viewId, path.toJString());
   }
 
   @override
@@ -62,7 +67,7 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
     _progressStreamControllerRegister.remove(viewId);
     _durationStreamControllerRegister.remove(viewId);
 
-    ApiVideoPreview.removeStateCallbacks(viewId);
+    ApiVideoPlayer.removeStateCallbacks(viewId);
   }
 
   @override
@@ -71,7 +76,7 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
     _progressStreamControllerRegister[viewId] = _progressStreamController;
     _durationStreamControllerRegister[viewId] = _durationStreamController;
 
-    ApiVideoPreview.setStateCallbacks(
+    ApiVideoPlayer.setStateCallbacks(
       viewId,
       IntegerValueCallback.implement(_StateCallback.instance),
       LongValueCallback.implement(_DurationCallback.instance),
@@ -82,31 +87,31 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
   ///
   @override
   void setExposure(int viewId, double exposure) {
-    ApiVideoPreview.setExposure(viewId, exposure);
+    ApiVideoPlayer.setExposure(viewId, exposure);
   }
 
   ///
   @override
   void setContrast(int viewId, double contrast) {
-    ApiVideoPreview.setContrast(viewId, contrast);
+    ApiVideoPlayer.setContrast(viewId, contrast);
   }
 
   ///
   @override
   void setSaturation(int viewId, double saturation) {
-    ApiVideoPreview.setSaturation(viewId, saturation);
+    ApiVideoPlayer.setSaturation(viewId, saturation);
   }
 
   ///
   @override
   void setTemperature(int viewId, double temperature) {
-    ApiVideoPreview.setTemperature(viewId, temperature);
+    ApiVideoPlayer.setTemperature(viewId, temperature);
   }
 
   ///
   @override
   void setTint(int viewId, double tint) {
-    ApiVideoPreview.setTint(viewId, tint);
+    ApiVideoPlayer.setTint(viewId, tint);
   }
 
   @override
@@ -127,7 +132,7 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
     // // Create callback for export completion
     // final callback = StringValueCallback.implement(_ExportCallback(exportId));
     //
-    // ApiVideoPreview.exportVideo(
+    // ApiVideoPlayer.exportVideo(
     //   viewId,
     //   videoPath.toJString(),
     //   filterPath?.toJString(),
@@ -140,6 +145,16 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
     // );
     //
     // return completer.future;
+  }
+
+  @override
+  void create(int viewId) {
+    ApiVideoPlayer.create(viewId);
+  }
+
+  @override
+  void dispose(int viewId) {
+    ApiVideoPlayer.destroy(viewId);
   }
 }
 

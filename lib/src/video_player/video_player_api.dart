@@ -20,6 +20,9 @@ abstract class VideoPlayerPlatformApi {
   ///
   Stream<Duration> get duration;
 
+  ///
+  void create(int viewId);
+
   /// Starts or resumes playback for the specified native view.
   ///
   /// [viewId] The unique identifier of the native view to control.
@@ -49,6 +52,9 @@ abstract class VideoPlayerPlatformApi {
   void loadFilterFile(int viewId, String filePath);
 
   ///
+  void removeFilterFile(int viewId);
+
+  ///
   void setStateCallbacks(int viewId);
 
   ///
@@ -68,6 +74,9 @@ abstract class VideoPlayerPlatformApi {
 
   ///
   void setTint(int viewId, double tint);
+
+  ///
+  void dispose(int viewId);
 
   /// Exports a video with applied filter to a specified location.
   ///

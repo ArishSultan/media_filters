@@ -29,6 +29,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   file_picker: ^10.2.0
+  material_symbols_icons: ^4.2815.1
 
 dev_dependencies:
   integration_test:

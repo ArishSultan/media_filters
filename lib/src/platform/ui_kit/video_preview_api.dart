@@ -46,6 +46,11 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
   }
 
   @override
+  void removeFilterFile(int viewId) {
+    DarwinFFI.vpRemoveLutFilter(viewId);
+  }
+
+  @override
   void loadAssetVideo(int viewId, String locator) {
     _loadVideo(viewId, locator, 1);
   }
@@ -184,6 +189,16 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
       NativeCallable<LongValueCallbackFFI>.listener(
     _onDurationCallback,
   );
+
+  @override
+  void create(int viewId) {
+    // TODO: implement create
+  }
+
+  @override
+  void dispose(int viewId) {
+    // TODO: implement dispose
+  }
 
 // static final _onExportCompletePtr =
 //     NativeCallable<VPExportCompleteCallbackFFI>.listener(

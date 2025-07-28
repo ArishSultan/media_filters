@@ -207,6 +207,11 @@ class VideoPlayer(private val id: Int, context: Context) {
     return 0
   }
 
+  @UnstableApi
+  fun removeLutFilter() {
+    filters.removeLutFilter()
+  }
+
   /**
    * Set exposure value and apply
    */

@@ -112,6 +112,11 @@ public func vpLoadLutFilter(playerId: Int, resource: UnsafePointer<CChar>) {
   VideoPlayersManager.get(playerId)?.loadLutFilter(String(cString: resource))
 }
 
+@_cdecl("vpRemoveLutFilter")
+public func vpRemoveLutFilter(playerId: Int) {
+  VideoPlayersManager.get(playerId)?.removeLutFilter()
+}
+
 @_cdecl("vpSetExposure")
 public func vpSetExposure(playerId: Int, value: Float) {
   VideoPlayersManager.get(playerId)?.setExposure(value)

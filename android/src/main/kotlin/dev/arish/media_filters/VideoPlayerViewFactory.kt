@@ -10,16 +10,24 @@ import io.flutter.plugin.platform.PlatformViewFactory
 
 class VideoPlayerViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
   override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
-    return VideoPlayerPlatformView(viewId = viewId, context = context)
+    val creationParams = args as Map<String, Any>;
+    return VideoPlayerPlatformView(
+      viewId = creationParams["viewId"] as Int,
+      type = creationParams["type"] as Int,
+      context = context
+    )
   }
 }
 
-class VideoPlayerPlatformView(private val viewId: Int, context: Context) : PlatformView {
-  private val player = VideoPlayersManager.createPlayer(viewId, context)
-
-  override fun getView(): View = player.view
+class VideoPlayerPlatformView(private val viewId: Int, private val type: Int, context: Context) : PlatformView {
+  override fun getView(): View {
+    if (type == 0) {
+      return VideoPlayersManager.getPlayer(viewId)!!.view
+    } else {
+      return ImageEditorsManager.get(viewId)!!.view
+    }
+  }
 
   override fun dispose() {
-    VideoPlayersManager.destroyPlayer(viewId)
   }
 }

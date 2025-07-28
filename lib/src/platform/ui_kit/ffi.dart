@@ -23,6 +23,10 @@ abstract final class DarwinFFI {
       'vpLoadLutFilter',
     );
 
+    vpRemoveLutFilter = lib.lookupFunction<VPTriggerFFI, VPTrigger>(
+      'vpRemoveLutFilter',
+    );
+
     vpLoadVideo = lib.lookupFunction<VPLoadVideoFFI, VPLoadVideo>(
       'vpLoadVideo',
     );
@@ -57,6 +61,7 @@ abstract final class DarwinFFI {
 
   static late final VPSeek vpSeek;
   static late final VPLoadVideo vpLoadVideo;
+  static late final VPTrigger vpRemoveLutFilter;
   static late final VPLoadLutFilter vpLoadLutFilter;
 
   static late final VPTrigger vpRemoveStateCallbacks;

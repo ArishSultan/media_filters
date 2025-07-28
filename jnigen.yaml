@@ -11,6 +11,8 @@ output:
     structure: single_file
 
 classes:
-  - 'dev.arish.media_filters.ApiVideoPreview'
+  - 'dev.arish.media_filters.ApiVideoPlayer'
+  - 'dev.arish.media_filters.ApiImageEditor'
   - 'dev.arish.media_filters.IntegerValueCallback'
+  - 'dev.arish.media_filters.ByteArrayCallback'
   - 'dev.arish.media_filters.LongValueCallback'

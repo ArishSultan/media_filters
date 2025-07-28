@@ -36,33 +36,77 @@ import 'dart:core' as core$_;
 import 'package:jni/_internal.dart' as jni$_;
 import 'package:jni/jni.dart' as jni$_;
 
-/// from: `dev.arish.media_filters.ApiVideoPreview`
-class ApiVideoPreview extends jni$_.JObject {
+/// from: `dev.arish.media_filters.ApiVideoPlayer`
+class ApiVideoPlayer extends jni$_.JObject {
   @jni$_.internal
   @core$_.override
-  final jni$_.JObjType<ApiVideoPreview> $type;
+  final jni$_.JObjType<ApiVideoPlayer> $type;
 
   @jni$_.internal
-  ApiVideoPreview.fromReference(
+  ApiVideoPlayer.fromReference(
     jni$_.JReference reference,
   )   : $type = type,
         super.fromReference(reference);
 
   static final _class =
-      jni$_.JClass.forName(r'dev/arish/media_filters/ApiVideoPreview');
+      jni$_.JClass.forName(r'dev/arish/media_filters/ApiVideoPlayer');
 
   /// The type which includes information such as the signature of this class.
-  static const nullableType = $ApiVideoPreview$NullableType();
-  static const type = $ApiVideoPreview$Type();
+  static const nullableType = $ApiVideoPlayer$NullableType();
+  static const type = $ApiVideoPlayer$Type();
   static final _id_INSTANCE = _class.staticFieldId(
     r'INSTANCE',
-    r'Ldev/arish/media_filters/ApiVideoPreview;',
+    r'Ldev/arish/media_filters/ApiVideoPlayer;',
   );
 
-  /// from: `static public final dev.arish.media_filters.ApiVideoPreview INSTANCE`
+  /// from: `static public final dev.arish.media_filters.ApiVideoPlayer INSTANCE`
   /// The returned object must be released after use, by calling the [release] method.
-  static ApiVideoPreview get INSTANCE =>
-      _id_INSTANCE.get(_class, const $ApiVideoPreview$Type());
+  static ApiVideoPlayer get INSTANCE =>
+      _id_INSTANCE.get(_class, const $ApiVideoPlayer$Type());
+
+  static final _id_create = _class.staticMethodId(
+    r'create',
+    r'(I)V',
+  );
+
+  static final _create = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void create(int i)`
+  static void create(
+    int i,
+  ) {
+    _create(_class.reference.pointer, _id_create as jni$_.JMethodIDPtr, i)
+        .check();
+  }
+
+  static final _id_destroy = _class.staticMethodId(
+    r'destroy',
+    r'(I)V',
+  );
+
+  static final _destroy = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void destroy(int i)`
+  static void destroy(
+    int i,
+  ) {
+    _destroy(_class.reference.pointer, _id_destroy as jni$_.JMethodIDPtr, i)
+        .check();
+  }
 
   static final _id_loadVideoFile = _class.staticMethodId(
     r'loadVideoFile',
@@ -260,6 +304,29 @@ class ApiVideoPreview extends jni$_.JObject {
         .check();
   }
 
+  static final _id_removeLutFilter = _class.staticMethodId(
+    r'removeLutFilter',
+    r'(I)V',
+  );
+
+  static final _removeLutFilter = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void removeLutFilter(int i)`
+  static void removeLutFilter(
+    int i,
+  ) {
+    _removeLutFilter(_class.reference.pointer,
+            _id_removeLutFilter as jni$_.JMethodIDPtr, i)
+        .check();
+  }
+
   static final _id_setExposure = _class.staticMethodId(
     r'setExposure',
     r'(IF)V',
@@ -452,20 +519,20 @@ class ApiVideoPreview extends jni$_.JObject {
   }
 }
 
-final class $ApiVideoPreview$NullableType
-    extends jni$_.JObjType<ApiVideoPreview?> {
+final class $ApiVideoPlayer$NullableType
+    extends jni$_.JObjType<ApiVideoPlayer?> {
   @jni$_.internal
-  const $ApiVideoPreview$NullableType();
+  const $ApiVideoPlayer$NullableType();
 
   @jni$_.internal
   @core$_.override
-  String get signature => r'Ldev/arish/media_filters/ApiVideoPreview;';
+  String get signature => r'Ldev/arish/media_filters/ApiVideoPlayer;';
 
   @jni$_.internal
   @core$_.override
-  ApiVideoPreview? fromReference(jni$_.JReference reference) => reference.isNull
+  ApiVideoPlayer? fromReference(jni$_.JReference reference) => reference.isNull
       ? null
-      : ApiVideoPreview.fromReference(
+      : ApiVideoPlayer.fromReference(
           reference,
         );
   @jni$_.internal
@@ -474,34 +541,34 @@ final class $ApiVideoPreview$NullableType
 
   @jni$_.internal
   @core$_.override
-  jni$_.JObjType<ApiVideoPreview?> get nullableType => this;
+  jni$_.JObjType<ApiVideoPlayer?> get nullableType => this;
 
   @jni$_.internal
   @core$_.override
   final superCount = 1;
 
   @core$_.override
-  int get hashCode => ($ApiVideoPreview$NullableType).hashCode;
+  int get hashCode => ($ApiVideoPlayer$NullableType).hashCode;
 
   @core$_.override
   bool operator ==(Object other) {
-    return other.runtimeType == ($ApiVideoPreview$NullableType) &&
-        other is $ApiVideoPreview$NullableType;
+    return other.runtimeType == ($ApiVideoPlayer$NullableType) &&
+        other is $ApiVideoPlayer$NullableType;
   }
 }
 
-final class $ApiVideoPreview$Type extends jni$_.JObjType<ApiVideoPreview> {
+final class $ApiVideoPlayer$Type extends jni$_.JObjType<ApiVideoPlayer> {
   @jni$_.internal
-  const $ApiVideoPreview$Type();
+  const $ApiVideoPlayer$Type();
 
   @jni$_.internal
   @core$_.override
-  String get signature => r'Ldev/arish/media_filters/ApiVideoPreview;';
+  String get signature => r'Ldev/arish/media_filters/ApiVideoPlayer;';
 
   @jni$_.internal
   @core$_.override
-  ApiVideoPreview fromReference(jni$_.JReference reference) =>
-      ApiVideoPreview.fromReference(
+  ApiVideoPlayer fromReference(jni$_.JReference reference) =>
+      ApiVideoPlayer.fromReference(
         reference,
       );
   @jni$_.internal
@@ -510,20 +577,431 @@ final class $ApiVideoPreview$Type extends jni$_.JObjType<ApiVideoPreview> {
 
   @jni$_.internal
   @core$_.override
-  jni$_.JObjType<ApiVideoPreview?> get nullableType =>
-      const $ApiVideoPreview$NullableType();
+  jni$_.JObjType<ApiVideoPlayer?> get nullableType =>
+      const $ApiVideoPlayer$NullableType();
 
   @jni$_.internal
   @core$_.override
   final superCount = 1;
 
   @core$_.override
-  int get hashCode => ($ApiVideoPreview$Type).hashCode;
+  int get hashCode => ($ApiVideoPlayer$Type).hashCode;
 
   @core$_.override
   bool operator ==(Object other) {
-    return other.runtimeType == ($ApiVideoPreview$Type) &&
-        other is $ApiVideoPreview$Type;
+    return other.runtimeType == ($ApiVideoPlayer$Type) &&
+        other is $ApiVideoPlayer$Type;
+  }
+}
+
+/// from: `dev.arish.media_filters.ApiImageEditor`
+class ApiImageEditor extends jni$_.JObject {
+  @jni$_.internal
+  @core$_.override
+  final jni$_.JObjType<ApiImageEditor> $type;
+
+  @jni$_.internal
+  ApiImageEditor.fromReference(
+    jni$_.JReference reference,
+  )   : $type = type,
+        super.fromReference(reference);
+
+  static final _class =
+      jni$_.JClass.forName(r'dev/arish/media_filters/ApiImageEditor');
+
+  /// The type which includes information such as the signature of this class.
+  static const nullableType = $ApiImageEditor$NullableType();
+  static const type = $ApiImageEditor$Type();
+  static final _id_INSTANCE = _class.staticFieldId(
+    r'INSTANCE',
+    r'Ldev/arish/media_filters/ApiImageEditor;',
+  );
+
+  /// from: `static public final dev.arish.media_filters.ApiImageEditor INSTANCE`
+  /// The returned object must be released after use, by calling the [release] method.
+  static ApiImageEditor get INSTANCE =>
+      _id_INSTANCE.get(_class, const $ApiImageEditor$Type());
+
+  static final _id_create = _class.staticMethodId(
+    r'create',
+    r'(I)V',
+  );
+
+  static final _create = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void create(int i)`
+  static void create(
+    int i,
+  ) {
+    _create(_class.reference.pointer, _id_create as jni$_.JMethodIDPtr, i)
+        .check();
+  }
+
+  static final _id_loadImageFile = _class.staticMethodId(
+    r'loadImageFile',
+    r'(ILjava/lang/String;)V',
+  );
+
+  static final _loadImageFile = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_
+                          .VarArgs<(jni$_.Int32, jni$_.Pointer<jni$_.Void>)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr, int, jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `static public final void loadImageFile(int i, java.lang.String string)`
+  static void loadImageFile(
+    int i,
+    jni$_.JString string,
+  ) {
+    final _$string = string.reference;
+    _loadImageFile(_class.reference.pointer,
+            _id_loadImageFile as jni$_.JMethodIDPtr, i, _$string.pointer)
+        .check();
+  }
+
+  static final _id_setImageCallback = _class.staticMethodId(
+    r'setImageCallback',
+    r'(ILdev/arish/media_filters/ByteArrayCallback;)V',
+  );
+
+  static final _setImageCallback = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_
+                          .VarArgs<(jni$_.Int32, jni$_.Pointer<jni$_.Void>)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr, int, jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `static public final void setImageCallback(int i, dev.arish.media_filters.ByteArrayCallback byteArrayCallback)`
+  static void setImageCallback(
+    int i,
+    ByteArrayCallback? byteArrayCallback,
+  ) {
+    final _$byteArrayCallback =
+        byteArrayCallback?.reference ?? jni$_.jNullReference;
+    _setImageCallback(
+            _class.reference.pointer,
+            _id_setImageCallback as jni$_.JMethodIDPtr,
+            i,
+            _$byteArrayCallback.pointer)
+        .check();
+  }
+
+  static final _id_removeImageCallback = _class.staticMethodId(
+    r'removeImageCallback',
+    r'(I)V',
+  );
+
+  static final _removeImageCallback = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void removeImageCallback(int i)`
+  static void removeImageCallback(
+    int i,
+  ) {
+    _removeImageCallback(_class.reference.pointer,
+            _id_removeImageCallback as jni$_.JMethodIDPtr, i)
+        .check();
+  }
+
+  static final _id_loadFilterFile = _class.staticMethodId(
+    r'loadFilterFile',
+    r'(ILjava/lang/String;)V',
+  );
+
+  static final _loadFilterFile = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_
+                          .VarArgs<(jni$_.Int32, jni$_.Pointer<jni$_.Void>)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr, int, jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `static public final void loadFilterFile(int i, java.lang.String string)`
+  static void loadFilterFile(
+    int i,
+    jni$_.JString string,
+  ) {
+    final _$string = string.reference;
+    _loadFilterFile(_class.reference.pointer,
+            _id_loadFilterFile as jni$_.JMethodIDPtr, i, _$string.pointer)
+        .check();
+  }
+
+  static final _id_removeLutFilter = _class.staticMethodId(
+    r'removeLutFilter',
+    r'(I)V',
+  );
+
+  static final _removeLutFilter = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void removeLutFilter(int i)`
+  static void removeLutFilter(
+    int i,
+  ) {
+    _removeLutFilter(_class.reference.pointer,
+            _id_removeLutFilter as jni$_.JMethodIDPtr, i)
+        .check();
+  }
+
+  static final _id_setExposure = _class.staticMethodId(
+    r'setExposure',
+    r'(IF)V',
+  );
+
+  static final _setExposure = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setExposure(int i, float f)`
+  static void setExposure(
+    int i,
+    double f,
+  ) {
+    _setExposure(_class.reference.pointer,
+            _id_setExposure as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setContrast = _class.staticMethodId(
+    r'setContrast',
+    r'(IF)V',
+  );
+
+  static final _setContrast = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setContrast(int i, float f)`
+  static void setContrast(
+    int i,
+    double f,
+  ) {
+    _setContrast(_class.reference.pointer,
+            _id_setContrast as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setSaturation = _class.staticMethodId(
+    r'setSaturation',
+    r'(IF)V',
+  );
+
+  static final _setSaturation = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setSaturation(int i, float f)`
+  static void setSaturation(
+    int i,
+    double f,
+  ) {
+    _setSaturation(_class.reference.pointer,
+            _id_setSaturation as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setTemperature = _class.staticMethodId(
+    r'setTemperature',
+    r'(IF)V',
+  );
+
+  static final _setTemperature = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setTemperature(int i, float f)`
+  static void setTemperature(
+    int i,
+    double f,
+  ) {
+    _setTemperature(_class.reference.pointer,
+            _id_setTemperature as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_setTint = _class.staticMethodId(
+    r'setTint',
+    r'(IF)V',
+  );
+
+  static final _setTint = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_.VarArgs<(jni$_.Int32, jni$_.Double)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int, double)>();
+
+  /// from: `static public final void setTint(int i, float f)`
+  static void setTint(
+    int i,
+    double f,
+  ) {
+    _setTint(_class.reference.pointer, _id_setTint as jni$_.JMethodIDPtr, i, f)
+        .check();
+  }
+
+  static final _id_destroy = _class.staticMethodId(
+    r'destroy',
+    r'(I)V',
+  );
+
+  static final _destroy = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr, jni$_.VarArgs<(jni$_.Int32,)>)>>(
+          'globalEnv_CallStaticVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, int)>();
+
+  /// from: `static public final void destroy(int i)`
+  static void destroy(
+    int i,
+  ) {
+    _destroy(_class.reference.pointer, _id_destroy as jni$_.JMethodIDPtr, i)
+        .check();
+  }
+}
+
+final class $ApiImageEditor$NullableType
+    extends jni$_.JObjType<ApiImageEditor?> {
+  @jni$_.internal
+  const $ApiImageEditor$NullableType();
+
+  @jni$_.internal
+  @core$_.override
+  String get signature => r'Ldev/arish/media_filters/ApiImageEditor;';
+
+  @jni$_.internal
+  @core$_.override
+  ApiImageEditor? fromReference(jni$_.JReference reference) => reference.isNull
+      ? null
+      : ApiImageEditor.fromReference(
+          reference,
+        );
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType get superType => const jni$_.JObjectType();
+
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType<ApiImageEditor?> get nullableType => this;
+
+  @jni$_.internal
+  @core$_.override
+  final superCount = 1;
+
+  @core$_.override
+  int get hashCode => ($ApiImageEditor$NullableType).hashCode;
+
+  @core$_.override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($ApiImageEditor$NullableType) &&
+        other is $ApiImageEditor$NullableType;
+  }
+}
+
+final class $ApiImageEditor$Type extends jni$_.JObjType<ApiImageEditor> {
+  @jni$_.internal
+  const $ApiImageEditor$Type();
+
+  @jni$_.internal
+  @core$_.override
+  String get signature => r'Ldev/arish/media_filters/ApiImageEditor;';
+
+  @jni$_.internal
+  @core$_.override
+  ApiImageEditor fromReference(jni$_.JReference reference) =>
+      ApiImageEditor.fromReference(
+        reference,
+      );
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType get superType => const jni$_.JObjectType();
+
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType<ApiImageEditor?> get nullableType =>
+      const $ApiImageEditor$NullableType();
+
+  @jni$_.internal
+  @core$_.override
+  final superCount = 1;
+
+  @core$_.override
+  int get hashCode => ($ApiImageEditor$Type).hashCode;
+
+  @core$_.override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($ApiImageEditor$Type) &&
+        other is $ApiImageEditor$Type;
   }
 }
 
@@ -752,6 +1230,235 @@ final class $IntegerValueCallback$Type
   bool operator ==(Object other) {
     return other.runtimeType == ($IntegerValueCallback$Type) &&
         other is $IntegerValueCallback$Type;
+  }
+}
+
+/// from: `dev.arish.media_filters.ByteArrayCallback`
+class ByteArrayCallback extends jni$_.JObject {
+  @jni$_.internal
+  @core$_.override
+  final jni$_.JObjType<ByteArrayCallback> $type;
+
+  @jni$_.internal
+  ByteArrayCallback.fromReference(
+    jni$_.JReference reference,
+  )   : $type = type,
+        super.fromReference(reference);
+
+  static final _class =
+      jni$_.JClass.forName(r'dev/arish/media_filters/ByteArrayCallback');
+
+  /// The type which includes information such as the signature of this class.
+  static const nullableType = $ByteArrayCallback$NullableType();
+  static const type = $ByteArrayCallback$Type();
+  static final _id_invoke = _class.instanceMethodId(
+    r'invoke',
+    r'(I[B)V',
+  );
+
+  static final _invoke = jni$_.ProtectedJniExtensions.lookup<
+              jni$_.NativeFunction<
+                  jni$_.JThrowablePtr Function(
+                      jni$_.Pointer<jni$_.Void>,
+                      jni$_.JMethodIDPtr,
+                      jni$_
+                          .VarArgs<(jni$_.Int32, jni$_.Pointer<jni$_.Void>)>)>>(
+          'globalEnv_CallVoidMethod')
+      .asFunction<
+          jni$_.JThrowablePtr Function(jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr, int, jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public abstract void invoke(int i, byte[] bs)`
+  void invoke(
+    int i,
+    jni$_.JByteArray bs,
+  ) {
+    final _$bs = bs.reference;
+    _invoke(reference.pointer, _id_invoke as jni$_.JMethodIDPtr, i,
+            _$bs.pointer)
+        .check();
+  }
+
+  /// Maps a specific port to the implemented interface.
+  static final core$_.Map<int, $ByteArrayCallback> _$impls = {};
+  static jni$_.JObjectPtr _$invoke(
+    int port,
+    jni$_.JObjectPtr descriptor,
+    jni$_.JObjectPtr args,
+  ) {
+    return _$invokeMethod(
+      port,
+      jni$_.MethodInvocation.fromAddresses(
+        0,
+        descriptor.address,
+        args.address,
+      ),
+    );
+  }
+
+  static final jni$_.Pointer<
+          jni$_.NativeFunction<
+              jni$_.JObjectPtr Function(
+                  jni$_.Int64, jni$_.JObjectPtr, jni$_.JObjectPtr)>>
+      _$invokePointer = jni$_.Pointer.fromFunction(_$invoke);
+
+  static jni$_.Pointer<jni$_.Void> _$invokeMethod(
+    int $p,
+    jni$_.MethodInvocation $i,
+  ) {
+    try {
+      final $d = $i.methodDescriptor.toDartString(releaseOriginal: true);
+      final $a = $i.args;
+      if ($d == r'invoke(I[B)V') {
+        _$impls[$p]!.invoke(
+          $a![0]!
+              .as(const jni$_.JIntegerType(), releaseOriginal: true)
+              .intValue(releaseOriginal: true),
+          $a![1]!.as(const jni$_.JByteArrayType(), releaseOriginal: true),
+        );
+        return jni$_.nullptr;
+      }
+    } catch (e) {
+      return jni$_.ProtectedJniExtensions.newDartException(e);
+    }
+    return jni$_.nullptr;
+  }
+
+  static void implementIn(
+    jni$_.JImplementer implementer,
+    $ByteArrayCallback $impl,
+  ) {
+    late final jni$_.RawReceivePort $p;
+    $p = jni$_.RawReceivePort(($m) {
+      if ($m == null) {
+        _$impls.remove($p.sendPort.nativePort);
+        $p.close();
+        return;
+      }
+      final $i = jni$_.MethodInvocation.fromMessage($m);
+      final $r = _$invokeMethod($p.sendPort.nativePort, $i);
+      jni$_.ProtectedJniExtensions.returnResult($i.result, $r);
+    });
+    implementer.add(
+      r'dev.arish.media_filters.ByteArrayCallback',
+      $p,
+      _$invokePointer,
+      [
+        if ($impl.invoke$async) r'invoke(I[B)V',
+      ],
+    );
+    final $a = $p.sendPort.nativePort;
+    _$impls[$a] = $impl;
+  }
+
+  factory ByteArrayCallback.implement(
+    $ByteArrayCallback $impl,
+  ) {
+    final $i = jni$_.JImplementer();
+    implementIn($i, $impl);
+    return ByteArrayCallback.fromReference(
+      $i.implementReference(),
+    );
+  }
+}
+
+abstract base mixin class $ByteArrayCallback {
+  factory $ByteArrayCallback({
+    required void Function(int i, jni$_.JByteArray bs) invoke,
+    bool invoke$async,
+  }) = _$ByteArrayCallback;
+
+  void invoke(int i, jni$_.JByteArray bs);
+  bool get invoke$async => false;
+}
+
+final class _$ByteArrayCallback with $ByteArrayCallback {
+  _$ByteArrayCallback({
+    required void Function(int i, jni$_.JByteArray bs) invoke,
+    this.invoke$async = false,
+  }) : _invoke = invoke;
+
+  final void Function(int i, jni$_.JByteArray bs) _invoke;
+  final bool invoke$async;
+
+  void invoke(int i, jni$_.JByteArray bs) {
+    return _invoke(i, bs);
+  }
+}
+
+final class $ByteArrayCallback$NullableType
+    extends jni$_.JObjType<ByteArrayCallback?> {
+  @jni$_.internal
+  const $ByteArrayCallback$NullableType();
+
+  @jni$_.internal
+  @core$_.override
+  String get signature => r'Ldev/arish/media_filters/ByteArrayCallback;';
+
+  @jni$_.internal
+  @core$_.override
+  ByteArrayCallback? fromReference(jni$_.JReference reference) =>
+      reference.isNull
+          ? null
+          : ByteArrayCallback.fromReference(
+              reference,
+            );
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType get superType => const jni$_.JObjectType();
+
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType<ByteArrayCallback?> get nullableType => this;
+
+  @jni$_.internal
+  @core$_.override
+  final superCount = 1;
+
+  @core$_.override
+  int get hashCode => ($ByteArrayCallback$NullableType).hashCode;
+
+  @core$_.override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($ByteArrayCallback$NullableType) &&
+        other is $ByteArrayCallback$NullableType;
+  }
+}
+
+final class $ByteArrayCallback$Type extends jni$_.JObjType<ByteArrayCallback> {
+  @jni$_.internal
+  const $ByteArrayCallback$Type();
+
+  @jni$_.internal
+  @core$_.override
+  String get signature => r'Ldev/arish/media_filters/ByteArrayCallback;';
+
+  @jni$_.internal
+  @core$_.override
+  ByteArrayCallback fromReference(jni$_.JReference reference) =>
+      ByteArrayCallback.fromReference(
+        reference,
+      );
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType get superType => const jni$_.JObjectType();
+
+  @jni$_.internal
+  @core$_.override
+  jni$_.JObjType<ByteArrayCallback?> get nullableType =>
+      const $ByteArrayCallback$NullableType();
+
+  @jni$_.internal
+  @core$_.override
+  final superCount = 1;
+
+  @core$_.override
+  int get hashCode => ($ByteArrayCallback$Type).hashCode;
+
+  @core$_.override
+  bool operator ==(Object other) {
+    return other.runtimeType == ($ByteArrayCallback$Type) &&
+        other is $ByteArrayCallback$Type;
   }
 }
 

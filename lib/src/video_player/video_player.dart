@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'video_player_api.dart';
 import 'video_player_state.dart';
@@ -26,7 +27,7 @@ final class VideoPlayerController extends ChangeNotifier {
   ///
   /// This is used by the factory constructor to inject the appropriate
   /// platform-specific API implementation.
-  VideoPlayerController._(this.api);
+  VideoPlayerController._(this._api, this.viewId);
 
   /// Creates a [VideoPreviewController] with a platform-specific implementation.
   ///
@@ -38,36 +39,36 @@ final class VideoPlayerController extends ChangeNotifier {
   ///
   /// Throws an [UnimplementedError] if the target platform is not supported.
   factory VideoPlayerController() {
-    return VideoPlayerController._(switch (defaultTargetPlatform) {
-      TargetPlatform.iOS => VideoPlayerDarwinApi(),
-      TargetPlatform.android => VideoPlayerAndroidApi(),
-      _ => throw UnimplementedError(),
-    });
+    final controller = VideoPlayerController._(
+      switch (defaultTargetPlatform) {
+        TargetPlatform.iOS => VideoPlayerDarwinApi(),
+        TargetPlatform.android => VideoPlayerAndroidApi(),
+        _ => throw UnimplementedError(),
+      },
+      ++_nextId,
+    );
+
+    controller._api
+      ..create(controller.viewId)
+      ..setStateCallbacks(controller.viewId);
+
+    return controller;
   }
 
   /// The underlying platform-specific API used to control the native video view.
   ///
   /// This object handles the actual communication with the native code.
   @protected
-  final VideoPlayerPlatformApi api;
-
-  /// Whether the controller is currently bound to a [VideoPreview] widget.
-  ///
-  /// A controller is considered "bound" after associated platform view has been
-  /// created and its unique identifier ([viewId]) has been set.
-  ///
-  /// Playback control methods like [play], [pause] and [seekTo] etc.. will throw
-  /// an exception if called when [isBound] is `false`.
-  bool get isBound => _viewId != null;
+  final VideoPlayerPlatformApi _api;
 
   ///
-  Stream<VideoPlayerState> get state => api.state;
+  Stream<VideoPlayerState> get state => _api.state;
 
   ///
-  Stream<Duration> get progress => api.progress;
+  Stream<Duration> get progress => _api.progress;
 
   ///
-  Stream<Duration> get duration => api.duration;
+  Stream<Duration> get duration => _api.duration;
 
   /// Starts or resumes video playback.
   ///
@@ -76,9 +77,7 @@ final class VideoPlayerController extends ChangeNotifier {
   ///
   /// Throws and [Exception] if the controller is not yet bound.
   void play() {
-    validateIsBound();
-
-    api.play(viewId);
+    _api.play(viewId);
   }
 
   /// Seeks the video to a specific position.
@@ -87,9 +86,7 @@ final class VideoPlayerController extends ChangeNotifier {
   ///
   /// Throws an [Exception] if the controller is not yet bound.
   void seekTo(int value) {
-    validateIsBound();
-
-    api.seekTo(viewId, value);
+    _api.seekTo(viewId, value);
   }
 
   /// Pauses video playback.
@@ -98,72 +95,57 @@ final class VideoPlayerController extends ChangeNotifier {
   ///
   /// Throws an [Exception] if the controller is not yet bound.
   void pause() {
-    validateIsBound();
-
-    api.pause(viewId);
+    _api.pause(viewId);
   }
 
   ///
   void loadFilterFile(String filePath) {
-    validateIsBound();
+    _api.loadFilterFile(viewId, filePath);
+  }
 
-    api.loadFilterFile(viewId, filePath);
+  ///
+  void removeFilterFile() {
+    _api.removeFilterFile(viewId);
   }
 
   ///
   void loadAssetVideo(String locator) {
-    validateIsBound();
-
-    api.loadAssetVideo(viewId, locator);
+    _api.loadAssetVideo(viewId, locator);
   }
 
   ///
   void loadFileVideo(String filePath) {
-    validateIsBound();
-
-    api.loadFileVideo(viewId, filePath);
+    _api.loadFileVideo(viewId, filePath);
   }
 
   ///
   void loadNetworkVideo(String url) {
-    validateIsBound();
-
-    api.loadNetworkVideo(viewId, url);
+    _api.loadNetworkVideo(viewId, url);
   }
 
   ///
   void setExposure(double exposure) {
-    validateIsBound();
-
-    api.setExposure(viewId, exposure);
+    _api.setExposure(viewId, exposure);
   }
 
   ///
   void setContrast(double contrast) {
-    validateIsBound();
-
-    api.setContrast(viewId, contrast);
+    _api.setContrast(viewId, contrast);
   }
 
   ///
   void setSaturation(double saturation) {
-    validateIsBound();
-
-    api.setSaturation(viewId, saturation);
+    _api.setSaturation(viewId, saturation);
   }
 
   ///
   void setTemperature(double temperature) {
-    validateIsBound();
-
-    api.setTemperature(viewId, temperature);
+    _api.setTemperature(viewId, temperature);
   }
 
   ///
   void setTint(double tint) {
-    validateIsBound();
-
-    api.setTint(viewId, tint);
+    _api.setTint(viewId, tint);
   }
 
   /// Exports a video with applied filter to a specified location.
@@ -183,9 +165,7 @@ final class VideoPlayerController extends ChangeNotifier {
     required int outputHeight,
     required bool maintainAspectRatio,
   }) {
-    validateIsBound();
-
-    return api.exportVideo(
+    return _api.exportVideo(
       viewId: viewId,
       videoPath: videoPath,
       filterPath: filterPath,
@@ -203,84 +183,38 @@ final class VideoPlayerController extends ChangeNotifier {
   ///
   /// Throws a [StateError] if accessed before the controller is bound.
   /// This property is intended for internal use and by subclasses.
-  @protected
-  int get viewId => _viewId!;
-
-  /// Ensures that the controller is bound to a view before proceeding.
-  ///
-  /// This is an internal utility to prevent calling platform methods with a
-  /// null `viewId`.
-  ///
-  /// Throws an [Exception] with a descriptive message if the controller
-  /// is not bound.
-  @protected
-  void validateIsBound() {
-    if (isBound) {
-      return;
-    }
-
-    throw Exception('This [$this] has not been found to any [VideoPreview]');
-  }
+  final int viewId;
 
   @override
   void dispose() {
-    if (_viewId != null) {
-      // api.dispose(_viewId!);
-    }
-
+    _api.removeStateCallbacks(viewId);
+    _api.dispose(viewId);
     super.dispose();
   }
 
-  /// A private nullable field to store the unique identifier of the native view.
-  ///
-  /// This value is `null` until the controller is bound to a [VideoPreview] widget.
-  int? _viewId;
-
-  ///
-  void _bindPlatformView(int viewId) {
-    _viewId = viewId;
-
-    api.setStateCallbacks(viewId);
-  }
-
-  ///
-  void _unbindPlatformView() {
-    _viewId = null;
-
-    api.removeStateCallbacks(viewId);
-  }
+  static int _nextId = -1;
 }
 
-class VideoPlayer extends StatefulWidget {
+class VideoPlayer extends StatelessWidget {
   const VideoPlayer({super.key, required this.controller});
 
   final VideoPlayerController controller;
 
   @override
-  State<VideoPlayer> createState() => _VideoPreviewState();
-}
-
-class _VideoPreviewState extends State<VideoPlayer> {
-  @override
   Widget build(BuildContext context) {
     const kViewType = 'media_filters.preview';
+    final creationParams = {'viewId': controller.viewId, 'type': 0};
 
     return switch (defaultTargetPlatform) {
       TargetPlatform.iOS => UiKitView(
           viewType: kViewType,
-          onPlatformViewCreated: widget.controller._bindPlatformView,
-        ),
+          creationParams: creationParams,
+          creationParamsCodec: StandardMessageCodec()),
       TargetPlatform.android => AndroidView(
           viewType: kViewType,
-          onPlatformViewCreated: widget.controller._bindPlatformView,
-        ),
+          creationParams: creationParams,
+          creationParamsCodec: StandardMessageCodec()),
       _ => throw UnimplementedError(),
     };
-  }
-
-  @override
-  void dispose() {
-    widget.controller._unbindPlatformView();
-    super.dispose();
   }
 }

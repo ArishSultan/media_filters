@@ -11,8 +11,19 @@ fun interface LongValueCallback {
   fun invoke(viewId: Int, state: Long)
 }
 
+
 @Keep
-object ApiVideoPreview {
+object ApiVideoPlayer {
+  @JvmStatic
+  fun create(viewId: Int) {
+    VideoPlayersManager.createPlayer(viewId, MediaFiltersPlugin.context!!)
+  }
+
+  @JvmStatic
+  fun destroy(imageId: Int) {
+    VideoPlayersManager.destroyPlayer(imageId)
+  }
+
   @JvmStatic
   @UnstableApi
   fun loadVideoFile(viewId: Int, path: String) {
@@ -61,6 +72,11 @@ object ApiVideoPreview {
   @UnstableApi
   fun loadFilterFile(viewId: Int, path: String) {
     VideoPlayersManager.getPlayer(viewId)?.loadFilterFile(path)
+  }
+
+  @JvmStatic
+  fun removeLutFilter(viewId: Int) {
+    VideoPlayersManager.getPlayer(viewId)?.removeLutFilter()
   }
 
   @JvmStatic
