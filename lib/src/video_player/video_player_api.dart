@@ -12,13 +12,24 @@ import 'video_player_state.dart';
 /// similar mechanism.
 abstract class VideoPlayerPlatformApi {
   ///
-  Stream<VideoPlayerState> get state;
+  Stream<VideoPlayerState> get stateStream;
+
+  VideoPlayerState? get state;
 
   ///
-  Stream<Duration> get progress;
+  Stream<Duration> get progressStream;
+
+  Duration? get progress;
 
   ///
-  Stream<Duration> get duration;
+  Stream<Duration> get durationStream;
+
+  Duration? get duration;
+
+  ///
+  Stream<double> get aspectRatioStream;
+
+  double? get aspectRatio;
 
   ///
   void create(int viewId);
@@ -55,12 +66,6 @@ abstract class VideoPlayerPlatformApi {
   void removeFilterFile(int viewId);
 
   ///
-  void setStateCallbacks(int viewId);
-
-  ///
-  void removeStateCallbacks(int viewId);
-
-  ///
   void setExposure(int viewId, double exposure);
 
   ///
@@ -76,7 +81,7 @@ abstract class VideoPlayerPlatformApi {
   void setTint(int viewId, double tint);
 
   ///
-  void dispose(int viewId);
+  void remove(int viewId);
 
   /// Exports a video with applied filter to a specified location.
   ///

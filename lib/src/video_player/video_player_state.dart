@@ -1,7 +1,13 @@
 ///
 enum VideoPlayerState {
   ///
-  stopped,
+  idle,
+
+  ///
+  loading,
+
+  ///
+  ready,
 
   ///
   playing,
@@ -10,8 +16,11 @@ enum VideoPlayerState {
   paused,
 
   ///
-  ended,
+  stopped,
 
   ///
-  error,
+  completed,
+
+  ///
+  error
 }

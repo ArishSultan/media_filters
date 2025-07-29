@@ -13,6 +13,8 @@ abstract final class DarwinFFI {
 
     final lib = DynamicLibrary.process();
 
+    vpCreate = lib.lookupFunction<VPCreateFFI, VPCreate>('vpCreate');
+    vpRemove = lib.lookupFunction<VPTriggerFFI, VPTrigger>('vpRemove');
     vpPlay = lib.lookupFunction<VPTriggerFFI, VPTrigger>('vpPlay');
 
     vpPause = lib.lookupFunction<VPTriggerFFI, VPTrigger>('vpPause');
@@ -28,15 +30,7 @@ abstract final class DarwinFFI {
     );
 
     vpLoadVideo = lib.lookupFunction<VPLoadVideoFFI, VPLoadVideo>(
-      'vpLoadVideo',
-    );
-
-    vpSetStateCallbacks = lib.lookupFunction<VPSetCallbacksFFI, VPSetCallbacks>(
-      'vpSetCallbacks',
-    );
-
-    vpRemoveStateCallbacks = lib.lookupFunction<VPTriggerFFI, VPTrigger>(
-      'vpRemoveCallbacks',
+      'vpLoad',
     );
 
     vpSetTint = lib.lookupFunction<VPFilterFFI, VPFilter>('vpSetTint');
@@ -49,12 +43,15 @@ abstract final class DarwinFFI {
       'vpSetTemperature',
     );
 
-    // vpExportVideo = lib.lookupFunction<VPExportVideoFFI, VPExportVideo>(
-    //   'vpExportVideo',
-    // );
+    exportVideo = lib.lookupFunction<ExportVideoFFI, ExportVideo>(
+      'exportVideo',
+    );
 
     _initialized = true;
   }
+
+  static late final VPCreate vpCreate;
+  static late final VPTrigger vpRemove;
 
   static late final VPTrigger vpPlay;
   static late final VPTrigger vpPause;
@@ -64,14 +61,10 @@ abstract final class DarwinFFI {
   static late final VPTrigger vpRemoveLutFilter;
   static late final VPLoadLutFilter vpLoadLutFilter;
 
-  static late final VPTrigger vpRemoveStateCallbacks;
-  static late final VPSetCallbacks vpSetStateCallbacks;
-
-  // static late final VPLoadResourceStr vpLoadLutFile;
   static late final VPFilter vpSetExposure;
   static late final VPFilter vpSetContrast;
   static late final VPFilter vpSetSaturation;
   static late final VPFilter vpSetTemperature;
   static late final VPFilter vpSetTint;
-// static late final VPExportVideo vpExportVideo;
+  static late final ExportVideo exportVideo;
 }

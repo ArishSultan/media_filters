@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'ffi.dart';
 import 'ffi_typedef.dart';
@@ -15,13 +16,61 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
   }
 
   @override
-  Stream<VideoPlayerState> get state => _stateStreamController.stream;
+  Stream<VideoPlayerState> get stateStream => _stateStreamController.stream;
 
   @override
-  Stream<Duration> get progress => _progressStreamController.stream;
+  VideoPlayerState? state;
 
   @override
-  Stream<Duration> get duration => _durationStreamController.stream;
+  Stream<Duration> get progressStream => _progressStreamController.stream;
+
+  @override
+  Duration? progress;
+
+  @override
+  Stream<Duration> get durationStream => _durationStreamController.stream;
+
+  @override
+  Duration? duration;
+
+  @override
+  Stream<double> get aspectRatioStream => _aspectRatioStreamController.stream;
+
+  @override
+  double? aspectRatio;
+
+  @override
+  void create(int viewId) {
+    _stateStreamControllerRegister[viewId] = (value) {
+      _stateStreamController.add(value);
+      state = value;
+    };
+    _durationStreamControllerRegister[viewId] = (value) {
+      _durationStreamController.add(value);
+      duration = value;
+    };
+    _progressStreamControllerRegister[viewId] = (value) {
+      _progressStreamController.add(value);
+      progress = value;
+    };
+    _aspectRatioStreamControllerRegister[viewId] = (value) {
+      _aspectRatioStreamController.add(value);
+      aspectRatio = value;
+    };
+
+    DarwinFFI.vpCreate(
+      viewId,
+      _onStateCallbackPtr.nativeFunction,
+      _onDurationCallbackPtr.nativeFunction,
+      _onProgressCallbackPtr.nativeFunction,
+      _onAspectRatioCallbackPtr.nativeFunction,
+    );
+  }
+
+  @override
+  void remove(int viewId) {
+    DarwinFFI.vpRemove(viewId);
+  }
 
   @override
   void pause(int viewId) {
@@ -67,36 +116,14 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
 
   void _loadVideo(int viewId, String locator, int type) {
     final locatorPtr = locator.toNativeUtf8();
-    DarwinFFI.vpLoadVideo(viewId, locatorPtr, type);
+    DarwinFFI.vpLoadVideo(viewId, type, locatorPtr);
     malloc.free(locatorPtr);
   }
 
   final _stateStreamController = StreamController<VideoPlayerState>.broadcast();
   final _progressStreamController = StreamController<Duration>.broadcast();
   final _durationStreamController = StreamController<Duration>.broadcast();
-
-  @override
-  void removeStateCallbacks(int viewId) {
-    _stateStreamControllerRegister.remove(viewId);
-    _progressStreamControllerRegister.remove(viewId);
-    _durationStreamControllerRegister.remove(viewId);
-
-    DarwinFFI.vpRemoveStateCallbacks(viewId);
-  }
-
-  @override
-  void setStateCallbacks(int viewId) {
-    _stateStreamControllerRegister[viewId] = _stateStreamController;
-    _progressStreamControllerRegister[viewId] = _progressStreamController;
-    _durationStreamControllerRegister[viewId] = _durationStreamController;
-
-    DarwinFFI.vpSetStateCallbacks(
-      viewId,
-      _onStateCallbackPtr.nativeFunction,
-      _onDurationCallbackPtr.nativeFunction,
-      _onProgressCallbackPtr.nativeFunction,
-    );
-  }
+  final _aspectRatioStreamController = StreamController<double>.broadcast();
 
   ///
   @override
@@ -190,15 +217,10 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
     _onDurationCallback,
   );
 
-  @override
-  void create(int viewId) {
-    // TODO: implement create
-  }
-
-  @override
-  void dispose(int viewId) {
-    // TODO: implement dispose
-  }
+  static final _onAspectRatioCallbackPtr =
+      NativeCallable<DoubleValueCallbackFFI>.listener(
+    _onAspectRatioCallback,
+  );
 
 // static final _onExportCompletePtr =
 //     NativeCallable<VPExportCompleteCallbackFFI>.listener(
@@ -220,32 +242,40 @@ final class VideoPlayerDarwinApi extends VideoPlayerPlatformApi {
 //   }
 // }
 
-final _durationStreamControllerRegister = <int, StreamController<Duration>>{};
-final _progressStreamControllerRegister = <int, StreamController<Duration>>{};
-final _stateStreamControllerRegister =
-    <int, StreamController<VideoPlayerState>>{};
+final _durationStreamControllerRegister = <int, ValueChanged<Duration>>{};
+final _progressStreamControllerRegister = <int, ValueChanged<Duration>>{};
+final _aspectRatioStreamControllerRegister = <int, ValueChanged<double>>{};
+final _stateStreamControllerRegister = <int, ValueChanged<VideoPlayerState>>{};
 
 void _onStateCallback(int viewId, int state) {
-  _stateStreamControllerRegister[viewId]?.add(
+  _stateStreamControllerRegister[viewId]?.call(
     switch (state) {
-      0 => VideoPlayerState.stopped,
-      1 => VideoPlayerState.playing,
-      2 => VideoPlayerState.paused,
-      3 => VideoPlayerState.ended,
-      4 => VideoPlayerState.error,
+      0 => VideoPlayerState.idle,
+      1 => VideoPlayerState.loading,
+      2 => VideoPlayerState.ready,
+      3 => VideoPlayerState.playing,
+      4 => VideoPlayerState.paused,
+      5 => VideoPlayerState.stopped,
+      6 => VideoPlayerState.completed,
+      7 => VideoPlayerState.error,
       _ => throw UnimplementedError(),
     },
   );
 }
 
 void _onProgressCallback(int viewId, int progress) {
-  _progressStreamControllerRegister[viewId]?.add(
+  _progressStreamControllerRegister[viewId]?.call(
     Duration(milliseconds: progress),
   );
 }
 
-void _onDurationCallback(int viewId, int progress) {
-  _durationStreamControllerRegister[viewId]?.add(
-    Duration(milliseconds: progress),
+void _onDurationCallback(int viewId, int duration) {
+  print(duration);
+  _durationStreamControllerRegister[viewId]?.call(
+    Duration(milliseconds: duration),
   );
+}
+
+void _onAspectRatioCallback(int viewId, double aspectRatio) {
+  _aspectRatioStreamControllerRegister[viewId]?.call(aspectRatio);
 }

@@ -9,13 +9,13 @@ import '../../video_player/video_player_state.dart';
 
 final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
   @override
-  Stream<VideoPlayerState> get state => _stateStreamController.stream;
+  Stream<VideoPlayerState> get stateStream => _stateStreamController.stream;
 
   @override
-  Stream<Duration> get progress => _progressStreamController.stream;
+  Stream<Duration> get progressStream => _progressStreamController.stream;
 
   @override
-  Stream<Duration> get duration => _durationStreamController.stream;
+  Stream<Duration> get durationStream => _durationStreamController.stream;
 
   final _stateStreamController = StreamController<VideoPlayerState>.broadcast();
   final _progressStreamController = StreamController<Duration>.broadcast();
@@ -153,9 +153,28 @@ final class VideoPlayerAndroidApi extends VideoPlayerPlatformApi {
   }
 
   @override
-  void dispose(int viewId) {
+  void remove(int viewId) {
     ApiVideoPlayer.destroy(viewId);
   }
+
+  @override
+  Stream<double> get aspectRatioStream => throw UnimplementedError();
+
+  @override
+  // TODO: implement aspectRatio
+  double? get aspectRatio => throw UnimplementedError();
+
+  @override
+  // TODO: implement duration
+  Duration? get duration => throw UnimplementedError();
+
+  @override
+  // TODO: implement progress
+  Duration? get progress => throw UnimplementedError();
+
+  @override
+  // TODO: implement state
+  VideoPlayerState? get state => throw UnimplementedError();
 }
 
 final _exportCompleters = <int, Completer<String>>{};
@@ -191,11 +210,14 @@ final class _StateCallback with $IntegerValueCallback {
   void invoke(int viewId, int state) {
     _stateStreamControllerRegister[viewId]?.add(
       switch (state) {
-        0 => VideoPlayerState.stopped,
-        1 => VideoPlayerState.playing,
-        2 => VideoPlayerState.paused,
-        3 => VideoPlayerState.ended,
-        4 => VideoPlayerState.error,
+        0 => VideoPlayerState.idle,
+        1 => VideoPlayerState.loading,
+        2 => VideoPlayerState.ready,
+        3 => VideoPlayerState.playing,
+        4 => VideoPlayerState.paused,
+        5 => VideoPlayerState.stopped,
+        6 => VideoPlayerState.completed,
+        7 => VideoPlayerState.error,
         _ => throw UnimplementedError(),
       },
     );

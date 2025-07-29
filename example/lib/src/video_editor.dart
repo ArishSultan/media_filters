@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:media_filters/media_filters.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:media_filters_example/src/filters_panel.dart';
+import 'package:path_provider/path_provider.dart';
 
 class VideoEditor extends StatefulWidget {
   const VideoEditor({super.key});
@@ -17,14 +19,17 @@ class VideoEditor extends StatefulWidget {
 class _VideoEditorState extends State<VideoEditor>
     with SingleTickerProviderStateMixin {
   final videoPlayerController = VideoPlayerController();
+  final videoExporter = VideoExporterApi();
 
   var exposure = 0.0;
   var contrast = 1.0;
   var saturation = 1.0;
   var temperature = 6500.0;
   var tint = 0.0;
-  var lutFile = null;
+  String? lutFile;
   var lutFileToggle = false;
+
+  String? pickedFile;
 
   @override
   Widget build(BuildContext context) {
@@ -37,22 +42,30 @@ class _VideoEditorState extends State<VideoEditor>
       ),
       child: Column(
         children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Container(
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: VideoPlayer(controller: videoPlayerController),
-            ),
+          StreamBuilder(
+            stream: videoPlayerController.aspectRatioStream,
+            builder: (context, asyncSnapshot) {
+              // print(asyncSnapshot.data);
+              return AspectRatio(
+                aspectRatio:
+                    videoPlayerController.aspectRatio ??
+                    asyncSnapshot.data ??
+                    1,
+                child: Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: VideoPlayer(controller: videoPlayerController),
+                ),
+              );
+            },
           ),
-
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: StreamBuilder(
-              stream: videoPlayerController.duration,
+              stream: videoPlayerController.durationStream,
               builder: (context, snapshot) {
                 return VideoPlaybackControls(
                   controller: videoPlayerController,
@@ -69,7 +82,24 @@ class _VideoEditorState extends State<VideoEditor>
             children: [
               Expanded(
                 child: FilledButton.tonalIcon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    videoExporter.export(
+                      id: 1,
+                      input: pickedFile!,
+                      output:
+                          '${(await getApplicationDocumentsDirectory()).path}/output.mp4',
+                      filter: lutFile,
+                      contrast: contrast,
+                      saturation: saturation,
+                      exposure: exposure,
+                      temperature: temperature,
+                      tint: tint,
+                    );
+
+                    videoExporter.progressStream.listen((progress) {
+                      print('Progress: $progress');
+                    });
+                  },
                   label: Text('Export Video'),
                   icon: Icon(Symbols.file_export),
                   style: FilledButton.styleFrom(
@@ -87,7 +117,7 @@ class _VideoEditorState extends State<VideoEditor>
 
               Expanded(
                 child: StreamBuilder(
-                  stream: videoPlayerController.duration,
+                  stream: videoPlayerController.durationStream,
                   builder: (context, asyncSnapshot) {
                     return FilledButton.tonalIcon(
                       onPressed: asyncSnapshot.hasData ? resetFilters : null,
@@ -128,7 +158,7 @@ class _VideoEditorState extends State<VideoEditor>
           const SizedBox(height: 20),
 
           StreamBuilder(
-            stream: videoPlayerController.duration,
+            stream: videoPlayerController.durationStream,
             builder: (context, asyncSnapshot) {
               if (asyncSnapshot.hasData) {
                 return FiltersPanel(
@@ -178,7 +208,7 @@ class _VideoEditorState extends State<VideoEditor>
 
   void onFilterChangeStart(double _) async {
     wasPlayingBeforeFilter =
-        (await videoPlayerController.state.last) == VideoPlayerState.playing;
+        videoPlayerController.state == VideoPlayerState.playing;
     if (wasPlayingBeforeFilter) {
       videoPlayerController.pause();
     }
@@ -222,7 +252,7 @@ class _VideoEditorState extends State<VideoEditor>
     toggle = toggle == true;
     if (toggle && lutFile != null) {
       lutFileToggle = toggle;
-      videoPlayerController.loadFilterFile(lutFile);
+      videoPlayerController.loadFilterFile(lutFile!);
     } else {
       videoPlayerController.removeFilterFile();
       lutFileToggle = toggle;
@@ -242,14 +272,27 @@ class _VideoEditorState extends State<VideoEditor>
   }
 
   void loadVideoFile() async {
+    pickedFile =
+        '${(await getApplicationDocumentsDirectory()).path}/output.mp4';
+
+    print(pickedFile);
+    print(File(pickedFile!).statSync());
+    videoPlayerController.loadFilterFile(pickedFile!);
     final file = await FilePicker.platform.pickFiles(
       type: FileType.video,
       allowMultiple: false,
     );
 
     if (file != null) {
-      videoPlayerController.loadFileVideo(file.paths[0]!);
+      pickedFile = file.paths[0];
+      videoPlayerController.loadFileVideo(pickedFile!);
     }
+  }
+
+  @override
+  void dispose() {
+    videoPlayerController.dispose();
+    super.dispose();
   }
 }
 
@@ -283,8 +326,10 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
       vsync: this,
       duration: Duration(milliseconds: 200),
     );
-    playerStateSubscription = widget.controller.state.listen((data) {
+    playerStateSubscription = widget.controller.stateStream.listen((data) {
       switch (data) {
+        case VideoPlayerState.idle:
+        case VideoPlayerState.ready:
         case VideoPlayerState.stopped:
           animationController.reverse();
           break;
@@ -294,12 +339,14 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
         case VideoPlayerState.paused:
           animationController.reverse();
           break;
-        case VideoPlayerState.ended:
+        case VideoPlayerState.completed:
           animationController.reverse();
           break;
         case VideoPlayerState.error:
           animationController.reverse();
           break;
+        case VideoPlayerState.loading:
+          animationController.reverse();
       }
 
       videoPlayerState = data;
@@ -311,7 +358,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
     return Column(
       children: [
         StreamBuilder(
-          stream: widget.controller.progress,
+          stream: widget.controller.progressStream,
           builder: (context, asyncSnapshot) {
             progress = asyncSnapshot.data ?? Duration.zero;
 

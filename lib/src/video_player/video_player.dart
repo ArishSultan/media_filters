@@ -23,6 +23,9 @@ import '../platform/ui_kit/video_preview_api.dart';
 /// controller is bound using the [isBound] property. Attempting to use a
 /// method before the controller is bound will result in an [Exception].
 final class VideoPlayerController extends ChangeNotifier {
+  static final Finalizer<(VideoPlayerPlatformApi, int)> _finalizer =
+      Finalizer((value) => value.$1.remove(value.$2));
+
   /// Internal constructor for creating a [VideoPreviewController].
   ///
   /// This is used by the factory constructor to inject the appropriate
@@ -48,9 +51,14 @@ final class VideoPlayerController extends ChangeNotifier {
       ++_nextId,
     );
 
-    controller._api
-      ..create(controller.viewId)
-      ..setStateCallbacks(controller.viewId);
+    controller._api.create(controller.viewId);
+
+    // Attach for disposal
+    _finalizer.attach(
+      controller,
+      (controller._api, controller.viewId),
+      detach: controller,
+    );
 
     return controller;
   }
@@ -62,13 +70,28 @@ final class VideoPlayerController extends ChangeNotifier {
   final VideoPlayerPlatformApi _api;
 
   ///
-  Stream<VideoPlayerState> get state => _api.state;
+  Stream<VideoPlayerState> get stateStream => _api.stateStream;
 
   ///
-  Stream<Duration> get progress => _api.progress;
+  Stream<Duration> get progressStream => _api.progressStream;
 
   ///
-  Stream<Duration> get duration => _api.duration;
+  Stream<Duration> get durationStream => _api.durationStream;
+
+  ///
+  Stream<double> get aspectRatioStream => _api.aspectRatioStream;
+
+  ///
+  Duration? get progress => _api.progress;
+
+  ///
+  Duration? get duration => _api.duration;
+
+  ///
+  VideoPlayerState? get state => _api.state;
+
+  ///
+  double? get aspectRatio => _api.aspectRatio;
 
   /// Starts or resumes video playback.
   ///
@@ -187,8 +210,7 @@ final class VideoPlayerController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _api.removeStateCallbacks(viewId);
-    _api.dispose(viewId);
+    _api.remove(viewId);
     super.dispose();
   }
 
@@ -203,17 +225,16 @@ class VideoPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const kViewType = 'media_filters.preview';
-    final creationParams = {'viewId': controller.viewId, 'type': 0};
 
     return switch (defaultTargetPlatform) {
       TargetPlatform.iOS => UiKitView(
           viewType: kViewType,
-          creationParams: creationParams,
-          creationParamsCodec: StandardMessageCodec()),
+          creationParams: controller.viewId,
+          creationParamsCodec: const StandardMessageCodec()),
       TargetPlatform.android => AndroidView(
           viewType: kViewType,
-          creationParams: creationParams,
-          creationParamsCodec: StandardMessageCodec()),
+          creationParams: controller.viewId,
+          creationParamsCodec: const StandardMessageCodec()),
       _ => throw UnimplementedError(),
     };
   }

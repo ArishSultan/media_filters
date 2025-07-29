@@ -270,8 +270,10 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
       vsync: this,
       duration: Duration(milliseconds: 200),
     );
-    playerStateSubscription = widget.controller.state.listen((data) {
+    playerStateSubscription = widget.controller.stateStream.listen((data) {
       switch (data) {
+        case VideoPlayerState.idle:
+        case VideoPlayerState.ready:
         case VideoPlayerState.stopped:
           animationController.reverse();
           break;
@@ -281,12 +283,14 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
         case VideoPlayerState.paused:
           animationController.reverse();
           break;
-        case VideoPlayerState.ended:
+        case VideoPlayerState.completed:
           animationController.reverse();
           break;
         case VideoPlayerState.error:
           animationController.reverse();
           break;
+        case VideoPlayerState.loading:
+          throw UnimplementedError();
       }
 
       videoPlayerState = data;
@@ -298,7 +302,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
     return Column(
       children: [
         StreamBuilder(
-          stream: widget.controller.progress,
+          stream: widget.controller.progressStream,
           builder: (context, asyncSnapshot) {
             progress = asyncSnapshot.data ?? Duration.zero;
 
