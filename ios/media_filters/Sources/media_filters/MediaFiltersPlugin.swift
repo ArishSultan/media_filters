@@ -1,5 +1,5 @@
-import Flutter
 import UIKit
+import Flutter
 
 public class MediaFiltersPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {

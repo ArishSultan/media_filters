@@ -76,38 +76,55 @@ class _VideoEditorState extends State<VideoEditor>
               Expanded(
                 child: FilledButton.tonalIcon(
                   onPressed: () async {
-                    videoExporter.export(
-                      id: 1,
-                      input: pickedFile!,
-                      output:
-                          '${(await getApplicationDocumentsDirectory()).path}/output.mp4',
-                      filter: lutFile,
-                      contrast: contrast,
-                      saturation: saturation,
-                      exposure: exposure,
-                      temperature: temperature,
-                      tint: tint,
-                    );
+                    final dstPath =
+                        '${(await getApplicationDocumentsDirectory()).path}'
+                        '/output.mp4';
 
-                    videoExporter.progressStream.listen((progress) async {
-                      if (progress < 1) {
-                        return;
-                      }
-                      pickedFile =
-                          '${(await getApplicationDocumentsDirectory()).path}/output.mp4';
+                    VideoTransformer()
+                        .transform(
+                          srcPath: pickedFile!,
+                          dstPath: dstPath,
+                          lutFile: lutFile,
+                          contrast: contrast,
+                          saturation: saturation,
+                          exposure: exposure,
+                          temperature: temperature,
+                          tint: tint,
+                        )
+                        .listen(
+                          (value) {
+                            print('progress $value');
+                          },
+                          onDone: () async {
+                            print('export done');
+                            print(File(dstPath).statSync());
 
-                      final stats = File(pickedFile!).statSync();
-                      if (stats.size > 0) {
-                        print('saving to gallery');
+                            if ((await Permission.storage.request()) ==
+                                PermissionStatus.granted) {
+                              GallerySaver.saveVideo(dstPath);
+                            }
 
-                        if ((await Permission.storage.request()) ==
-                            PermissionStatus.granted) {
-                          GallerySaver.saveVideo(pickedFile!);
-                        }
+                            print('saving to gallery done');
+                          },
+                          onError: (error) {
+                            print('error: $error');
+                          },
+                        );
 
-                        print('saving to gallery done');
-                      }
-                    });
+                    // videoExporter.progressStream.listen((progress) async {
+                    //   if (progress < 1) {
+                    //     return;
+                    //   }
+                    //   pickedFile =
+                    //       '${(await getApplicationDocumentsDirectory()).path}/output.mp4';
+                    //
+                    //   final stats = File(pickedFile!).statSync();
+                    //   if (stats.size > 0) {
+                    //     print('saving to gallery');
+                    //
+
+                    //   }
+                    // });
                   },
                   label: Text('Export Video'),
                   icon: Icon(Symbols.file_export),
@@ -255,7 +272,7 @@ class _VideoEditorState extends State<VideoEditor>
   }
 
   void resetFilters() {
-    videoPlayerController.setAndApplyFilters(tint: -150);
+    videoPlayerController.setAndApplyFilters(temperature: temperature = 200);
     // videoPlayerController.setTint(tint = 0.8);
     // videoPlayerController.setExposure(exposure = 0.0);
     // videoPlayerController.setContrast(contrast = 1.0);
@@ -272,7 +289,8 @@ class _VideoEditorState extends State<VideoEditor>
     );
 
     if (result != null) {
-      await videoPlayerController.loadFile(File(result.files[0]!.path!));
+      pickedFile = result.files[0].path;
+      await videoPlayerController.loadFile(File(result.files[0].path!));
       setState(() {});
     }
 

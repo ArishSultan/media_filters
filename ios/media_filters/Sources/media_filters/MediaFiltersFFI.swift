@@ -150,59 +150,58 @@ public func vpSetTint(playerId: Int, value: Float) {
   VideoPlayer.get(playerId)?.mediaFilters.tint = value
 }
 
-@_cdecl("exportVideo")
-func exportVideoWithFilters(
+@_cdecl("transformVideo")
+func transformVideo(
   id: Int,
-
+  
   //
-  input: UnsafePointer<CChar>,
-  output: UnsafePointer<CChar>,
-  filter: UnsafePointer<CChar>?,
-  contrast: Float,
-  saturation: Float,
-  exposure: Float,
-  temperature: Float,
+  width: Float,
+  height: Float,
+  preserveAspectRatio: Bool,
+  
+  //
   tint: Float,
+  contrast: Float,
+  exposure: Float,
+  saturation: Float,
+  temperature: Float,
+  
+  //
+  lutFile: UnsafePointer<CChar>?,
+  srcFile: UnsafePointer<CChar>,
+  dstFile: UnsafePointer<CChar>,
   
   //
   onProgress: FloatValueCallback,
-  onError: StringValueCallback,
   onCompletion: VoidCallback,
+  onError: StringValueCallback,
 ) {
   let filters = MediaFilters()
   
-  if filter != nil {
-    let lutUrl = URL(fileURLWithPath: String(cString: filter!))
+  if lutFile != nil {
+    let lutUrl = URL(fileURLWithPath: String(cString: lutFile!))
     filters.loadLutFilter(lutUrl: lutUrl)
   }
   
-
   filters.contrast = contrast
   filters.saturation = saturation
   filters.exposure = exposure
   filters.temperature = temperature
   filters.tint = tint
   
-//  let exporter = VideoExporter(
-//    inputURL: URL(fileURLWithPath: String(cString: input)),
-//    outputURL: URL(fileURLWithPath: String(cString: output)),
-//    mediaFilters: filters
-//  )
-//  
-//  // 3. Set progress and completion handlers
-//  exporter.progressHandler = { progress in
-//    onProgress(id, progress)
-//  }
-//  
-//  exporter.completionHandler = { result in
-//    switch result {
-//      case .success:
-//        onCompletion(id)
-//        print("Export completed successfully! Video saved to: \(output)")
-//      case .failure(let error):
-//        print("Export failed: \(error.localizedDescription)")
-//    }
-//  }
-//  
-//  exporter.export()
+  VideoTransformer.transform(
+    id: id,
+    
+    width: width,
+    height: height,
+    preserveAspectRatio: preserveAspectRatio,
+    
+    srcUrl: URL(fileURLWithPath: String(cString: srcFile)),
+    dstUrl: URL(fileURLWithPath: String(cString: dstFile)),
+    filters: filters,
+    
+    onProgress: onProgress,
+    onCompletion: onCompletion,
+    onError: onError,
+  )
 }

@@ -13,8 +13,8 @@ final class CGSize extends Struct {
 typedef CString = Pointer<Utf8>;
 
 typedef PtrFn<T extends Function> = Pointer<NativeFunction<T>>;
+typedef PtrErrorFn = PtrFn<FFI$ValueCallback<CString>>;
 typedef PtrValueFn<T extends SizedNativeType> = PtrFn<FFI$ValueCallback<T>>;
-typedef PtrErrorFn<T extends SizedNativeType> = PtrFn<FFI$ValueCallback<T>>;
 
 typedef VoidCallback = void Function(int);
 typedef ValueCallback<T> = void Function(int, T);
@@ -50,6 +50,42 @@ typedef FFI$VpLoad = Void Function(
 );
 typedef FFI$VpTrigger = Void Function(Int);
 typedef FFI$VpPrepare = Void Function(Int, PtrValueFn<Int>, PtrValueFn<Long>);
+
+typedef VideoTransform = void Function(
+  int,
+  double width,
+  double height,
+  bool preserveAspectRatio,
+  double tint,
+  double contrast,
+  double exposure,
+  double saturation,
+  double temperature,
+  CString lutFile,
+  CString srcPath,
+  CString dstPath,
+  PtrValueFn<Float>,
+  PtrFn<FFI$VoidCallback>,
+  PtrErrorFn,
+);
+
+typedef FFI$VideoTransform = Void Function(
+  Int,
+  Float width,
+  Float height,
+  Bool preserveAspectRatio,
+  Float tint,
+  Float contrast,
+  Float exposure,
+  Float saturation,
+  Float temperature,
+  CString lutFile,
+  CString srcPath,
+  CString dstPath,
+  PtrValueFn<Float>,
+  PtrFn<FFI$VoidCallback>,
+  PtrErrorFn,
+);
 
 final class DarwinFFI {
   DarwinFFI._(DynamicLibrary lib)
@@ -103,6 +139,9 @@ final class DarwinFFI {
         vpSetTemperatureFilter =
             lib.lookupFunction<FFI$ValueSetter<Float>, ValueSetter<double>>(
           'vpSetTemperatureFilter',
+        ),
+        transformVideo = lib.lookupFunction<FFI$VideoTransform, VideoTransform>(
+          'transformVideo',
         );
 
   final VpSeek vpSeek;
@@ -126,6 +165,8 @@ final class DarwinFFI {
   final ValueSetter<double> vpSetContrastFilter;
   final ValueSetter<double> vpSetSaturationFilter;
   final ValueSetter<double> vpSetTemperatureFilter;
+
+  final VideoTransform transformVideo;
 }
 
 final darwinFFI = DarwinFFI._(DynamicLibrary.process());

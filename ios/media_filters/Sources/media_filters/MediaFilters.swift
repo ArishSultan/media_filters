@@ -49,35 +49,63 @@ public class MediaFilters {
   private var _saturation = BoundedValue<Float>(min: 0.0, max: 2.0, initialValue: 1.0)
   private var _temperature = BoundedValue<Float>(min: 2000.0, max: 10000.0, initialValue: 6500.0)
   
+  // Cache invalidation flag
+  private var _filtersNeedUpdate = true
+  
   public var lutFilter: CIFilter? {
     get { return _lutFilter }
   }
   
   public var tint: Float {
-    set { _tint.value = newValue }
+    set {
+      if _tint.value != newValue {
+        _tint.value = newValue
+        _filtersNeedUpdate = true
+      }
+    }
     get { return _tint.value }
   }
   
   public var exposure: Float {
-    set { _exposure.value = newValue }
+    set {
+      if _exposure.value != newValue {
+        _exposure.value = newValue
+        _filtersNeedUpdate = true
+      }
+    }
     get { return _exposure.value }
   }
-
+  
   public var contrast: Float {
-    set { _contrast.value = newValue }
+    set {
+      if _contrast.value != newValue {
+        _contrast.value = newValue
+        _filtersNeedUpdate = true
+      }
+    }
     get { return _contrast.value }
   }
-
+  
   public var saturation: Float {
-    set { _saturation.value = newValue }
+    set {
+      if _saturation.value != newValue {
+        _saturation.value = newValue
+        _filtersNeedUpdate = true
+      }
+    }
     get { return _saturation.value }
   }
-
+  
   public var temperature: Float {
-    set { _temperature.value = newValue }
+    set {
+      if _temperature.value != newValue {
+        _temperature.value = newValue
+        _filtersNeedUpdate = true
+      }
+    }
     get { return _temperature.value }
   }
-
+  
   public var ciFilter: CIFilter {
     get {
       return CustomCompositeFilter(filters: self)
@@ -85,29 +113,48 @@ public class MediaFilters {
   }
   
   public func unloadLutFilter() {
-    _lutFilter = nil
+    if _lutFilter != nil {
+      _lutFilter = nil
+      _filtersNeedUpdate = true
+    }
   }
   
   public func loadLutFilter(lutUrl: URL) {
     guard let sc3dFilter = try? SC3DLut(contentsOf: lutUrl),
           let ciFilter = try? sc3dFilter.ciFilter() else {
-      _lutFilter = nil
+      if _lutFilter != nil {
+        _lutFilter = nil
+        _filtersNeedUpdate = true
+      }
       return
     }
     
     _lutFilter = ciFilter
+    _filtersNeedUpdate = true
+  }
+  
+  // Internal method to check if filters need updating
+  internal var filtersNeedUpdate: Bool {
+    return _filtersNeedUpdate
+  }
+  
+  // Internal method to mark filters as updated
+  internal func markFiltersUpdated() {
+    _filtersNeedUpdate = false
   }
 }
 
 /// A custom CIFilter that chains multiple filters together based on MediaFilters settings.
 public class CustomCompositeFilter: CIFilter {
   private let filterSettings: MediaFilters
+  private var cachedFilterChain: [CIFilter] = []
   
   @objc dynamic var inputImage: CIImage?
   
   init(filters: MediaFilters) {
     self.filterSettings = filters
     super.init()
+    buildFilterChain()
   }
   
   required init?(coder: NSCoder) {
@@ -117,22 +164,27 @@ public class CustomCompositeFilter: CIFilter {
   override public var outputImage: CIImage? {
     guard let inputImage = inputImage else { return nil }
     
-    return applyChainedComposite(inputImage: inputImage)
+    // Rebuild chain if settings changed
+    if filterSettings.filtersNeedUpdate {
+      buildFilterChain()
+      filterSettings.markFiltersUpdated()
+    }
+    
+    return applyFilterChain(inputImage: inputImage)
   }
   
-  private func applyChainedComposite(inputImage: CIImage) -> CIImage? {
-    var currentImage = inputImage
-    var filters: [CIFilter] = []
+  private func buildFilterChain() {
+    cachedFilterChain.removeAll()
     
     // Build filter array based on which settings are active
     if let lut = filterSettings.lutFilter {
-      filters.append(lut)
+      cachedFilterChain.append(lut)
     }
     
     if filterSettings.exposure != 0.0 {
       let exposureFilter = CIFilter.exposureAdjust()
       exposureFilter.ev = filterSettings.exposure
-      filters.append(exposureFilter)
+      cachedFilterChain.append(exposureFilter)
     }
     
     if filterSettings.contrast != 1.0 || filterSettings.saturation != 1.0 {
@@ -140,7 +192,7 @@ public class CustomCompositeFilter: CIFilter {
       colorFilter.contrast = filterSettings.contrast
       colorFilter.saturation = filterSettings.saturation
       colorFilter.brightness = 0.0
-      filters.append(colorFilter)
+      cachedFilterChain.append(colorFilter)
     }
     
     if filterSettings.temperature != 6500.0 || filterSettings.tint != 0.0 {
@@ -150,11 +202,17 @@ public class CustomCompositeFilter: CIFilter {
         forKey: "inputNeutral"
       )
       tempTintFilter.setValue(CIVector(x: 6500, y: 0), forKey: "inputTargetNeutral")
-      filters.append(tempTintFilter)
+      cachedFilterChain.append(tempTintFilter)
     }
+  }
+  
+  private func applyFilterChain(inputImage: CIImage) -> CIImage? {
+    guard !cachedFilterChain.isEmpty else { return inputImage }
     
-    // Apply all filters in a chain
-    for filter in filters {
+    var currentImage = inputImage
+    
+    // Apply all cached filters in sequence
+    for filter in cachedFilterChain {
       filter.setValue(currentImage, forKey: kCIInputImageKey)
       guard let output = filter.outputImage else { return nil }
       currentImage = output
