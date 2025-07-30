@@ -391,7 +391,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
   }
 
   void replay(int seconds) async {
-    widget.controller.seekTo(
+    widget.controller.seek(
       Duration(seconds: max(0, progress.inSeconds - seconds)).inMilliseconds,
     );
   }
@@ -405,7 +405,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
   }
 
   void forward(int seconds) async {
-    widget.controller.seekTo(
+    widget.controller.seek(
       Duration(
         seconds: min(widget.duration!.inSeconds, progress.inSeconds + seconds),
       ).inMilliseconds,
@@ -421,7 +421,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
   }
 
   void seekTo(double value) {
-    widget.controller.seekTo(value.round());
+    widget.controller.seek(value.round());
   }
 
   @override

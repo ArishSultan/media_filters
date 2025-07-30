@@ -1,3 +1,4 @@
+import Darwin.C
 import UIKit
 import CoreImage
 import Foundation
@@ -65,7 +66,7 @@ public enum VideoPlayerState: Int {
 /// player.load(locator: "sample_video.mp4", resourceType: .asset)
 /// player.play()
 /// ```
-public final class VideoPlayer: NSObject, Filterable {
+public final class VideoPlayer: NSObject {
   /// Unique identifier for this player instance
   private let id: Int
   
@@ -86,22 +87,14 @@ public final class VideoPlayer: NSObject, Filterable {
   }
   
   /// Total video duration in milliseconds (-1 if unknown)
-  private var _duration: Int64 = -1 {
-    didSet { if oldValue != _duration { durationListener(id, _duration) } }
-  }
-  private var duration: CMTime {
-    get { return CMTime(value: _duration, timescale: 1000) }
-    set {
-      _duration = newValue.milliseconds
-    }
-  }
+  private var duration: CMTime = CMTime.zero
   
   /// Current playback progress in milliseconds
   private var _progress: Int64 = 0 {
     didSet { if oldValue != _progress { progressListener(id, _progress) } }
   }
   private var progress: CMTime {
-    get { return CMTime(value: _duration, timescale: 1000) }
+    get { return CMTime(value: _progress, timescale: 1000) }
     set {
       _progress = newValue.milliseconds
     }
@@ -113,13 +106,8 @@ public final class VideoPlayer: NSObject, Filterable {
   /// Callback for state changes
   private let stateListener: IntValueCallback
   
-  /// Callback for duration updates
-  private let durationListener: LongValueCallback
-  
   /// Callback for progress updates
   private let progressListener: LongValueCallback
-  
-  private let aspectRatioListener: DoubleValueCallback
   
   /// Initializes a new VideoPlayer instance
   /// - Parameters:
@@ -130,19 +118,13 @@ public final class VideoPlayer: NSObject, Filterable {
   init(
     id: Int,
     stateListener: @escaping IntValueCallback,
-    durationListener: @escaping LongValueCallback,
     progressListener: @escaping LongValueCallback,
-    aspectRatioListener: @escaping DoubleValueCallback,
   ) {
     self.id = id
     self.stateListener = stateListener
-    self.durationListener = durationListener
     self.progressListener = progressListener
-    self.aspectRatioListener = aspectRatioListener
     
     super.init()
-    
-    self.mediaFilters.filterable = self
   }
   
   // MARK: - Public Methods
@@ -162,8 +144,14 @@ public final class VideoPlayer: NSObject, Filterable {
   /// - Parameters:
   ///   - locator: Path, filename, or URL of the video
   ///   - resourceType: Type of video resource (.asset, .file, or .network)
-  public func load(locator: String, resourceType: VideoResourceType?) {
+  public func load(
+    locator: String,
+    resourceType: VideoResourceType?,
+    onLoad: VoidCallback,
+    onLoadError: StringValueCallback,
+  ) {
     guard let resourceType = resourceType else {
+      onLoadError(id, strdup("Error: invalid resource type"))
       state = .error
       return
     }
@@ -172,6 +160,7 @@ public final class VideoPlayer: NSObject, Filterable {
     state = .loading
     
     guard let videoUrl = createURL(from: locator, type: resourceType) else {
+      onLoadError(id, strdup("Error: invalid resource locator"))
       state = .error
       return
     }
@@ -187,7 +176,7 @@ public final class VideoPlayer: NSObject, Filterable {
     setupObservers(for: playerItem)
     setupProgressObserver()
     
-    loadDurationAsync(asset)
+    loadDurationAsync(asset, onLoad: onLoad, onLoadError: onLoadError)
   }
   
   /// Starts or resumes video playback
@@ -221,6 +210,10 @@ public final class VideoPlayer: NSObject, Filterable {
     player.seek(to: targetTime)
   }
   
+  public func getState() -> VideoPlayerState {
+    return state
+  }
+  
   /// Gets the current playback time in milliseconds
   /// - Returns: Current time in milliseconds, or 0 if unavailable
   public func getCurrentTime() -> Int64 {
@@ -231,7 +224,7 @@ public final class VideoPlayer: NSObject, Filterable {
   /// Gets the video duration in milliseconds
   /// - Returns: Duration in milliseconds, or -1 if unknown
   public func getDuration() -> Int64 {
-    return _duration
+    return duration.milliseconds
   }
   
   /// Sets the playback rate
@@ -301,18 +294,23 @@ public final class VideoPlayer: NSObject, Filterable {
   }
   
   /// Loads video duration asynchronously
-  private func loadDurationAsync(_ asset: AVAsset) {
+  private func loadDurationAsync(
+    _ asset: AVAsset,
+    onLoad: VoidCallback,
+    onLoadError: StringValueCallback,
+  ) {
     if #available(iOS 15.0, *) {
       Task {
         do {
           let duration = try await asset.load(.duration)
           await MainActor.run {
             self.duration = duration
-            self.notifyAspectRatio()
+            onLoad(self.id)
           }
         } catch {
           await MainActor.run {
             self.state = .error
+            onLoadError(self.id, strdup("Error: loading duration failed"))
           }
         }
       }
@@ -322,8 +320,9 @@ public final class VideoPlayer: NSObject, Filterable {
           var error: NSError?
           if asset.statusOfValue(forKey: "duration", error: &error) == .loaded {
             self.duration = asset.duration
-            self.notifyAspectRatio()
+            onLoad(self.id)
           } else {
+            onLoadError(self.id, strdup("Error: loading duration failed"))
             self.state = .error
           }
         }
@@ -331,18 +330,13 @@ public final class VideoPlayer: NSObject, Filterable {
     }
   }
   
-  private func notifyAspectRatio() {
-    guard let currentItem = player?.currentItem,
-          let videoTrack = currentItem.asset.tracks(withMediaType: .video).first else { return }
-          
-    let videoSize = videoTrack.naturalSize
-    let transform = videoTrack.preferredTransform
-    let actualSize = videoSize.applying(transform)
+  func getVideoResolution() -> CGSize? {
+    guard let asset = playerItem?.asset,
+          let track = asset.tracks(withMediaType: AVMediaType.video).first else {
+      return nil
+    }
     
-    print("i am here \(actualSize.width / actualSize.height)")
-    print("i am here \(actualSize.height / actualSize.width)")
-    
-    aspectRatioListener(id, actualSize.width / actualSize.height)
+    return track.naturalSize.applying(track.preferredTransform)
   }
   
   /// Releases all player resources
@@ -366,7 +360,7 @@ public final class VideoPlayer: NSObject, Filterable {
     playerLayer.player = nil
     
     // Reset state
-    _duration = -1
+    duration = CMTime.zero
     _progress = 0
     state = .idle
   }
@@ -406,17 +400,12 @@ public final class VideoPlayer: NSObject, Filterable {
     state = .loading
   }
   
-  public func applyFilter(_ filter: CIFilter?) {
+  public func applyFilter() {
     guard let playerItem = self.playerItem else {
-      // If there's no player item or no filters, ensure the composition is nil.
-      self.playerItem?.videoComposition = nil
       return
     }
     
-    if filter == nil {
-      playerItem.videoComposition = nil
-      return
-    }
+    let filter: CIFilter = mediaFilters.ciFilter
     
     playerItem.videoComposition = AVVideoComposition(asset: playerItem.asset) { [weak self] request in
       guard let self = self else {
@@ -424,9 +413,9 @@ public final class VideoPlayer: NSObject, Filterable {
         return
       }
       
-      filter!.setValue(request.sourceImage, forKey: kCIInputImageKey)
+      filter.setValue(request.sourceImage, forKey: kCIInputImageKey)
       
-      if let filteredImage = filter!.outputImage {
+      if let filteredImage = filter.outputImage {
         request.finish(with: filteredImage, context: nil)
       } else {
         request.finish(with: request.sourceImage, context: nil)
@@ -455,16 +444,12 @@ extension VideoPlayer {
   /// Creates or retrieves a VideoPlayer instance
   /// - Parameters:
   ///   - playerId: Unique identifier for the player
-  ///   - stateListener: Callback for state changes
-  ///   - durationListener: Callback for duration updates
   ///   - progressListener: Callback for progress updates
   /// - Returns: VideoPlayer instance (existing or newly created)
   public static func create(
     playerId: Int,
     stateListener: @escaping IntValueCallback,
-    durationListener: @escaping LongValueCallback,
     progressListener: @escaping LongValueCallback,
-    aspectRatioListener: @escaping DoubleValueCallback,
   ) -> VideoPlayer {
     lock.lock()
     defer { lock.unlock() }
@@ -476,9 +461,7 @@ extension VideoPlayer {
     let newPlayer = VideoPlayer(
       id: playerId,
       stateListener: stateListener,
-      durationListener: durationListener,
       progressListener: progressListener,
-      aspectRatioListener: aspectRatioListener
     )
     
     players[playerId] = newPlayer

@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:media_filters/media_filters.dart';
 import 'package:media_filters_example/src/app.dart';
 
 void main() {

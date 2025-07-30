@@ -4,10 +4,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:media_filters/media_filters.dart';
-import 'package:material_symbols_icons/symbols.dart';
-import 'package:media_filters_example/src/filters_panel.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class VideoEditor extends StatefulWidget {
   const VideoEditor({super.key});
@@ -21,11 +22,12 @@ class _VideoEditorState extends State<VideoEditor>
   final videoPlayerController = VideoPlayerController();
   final videoExporter = VideoExporterApi();
 
-  var exposure = 0.0;
-  var contrast = 1.0;
-  var saturation = 1.0;
-  var temperature = 6500.0;
-  var tint = 0.0;
+  var tint = kDefaultTint;
+  var exposure = kDefaultExposure;
+  var contrast = kDefaultContrast;
+  var saturation = kDefaultSaturation;
+  var temperature = kDefaultTemperature;
+
   String? lutFile;
   var lutFileToggle = false;
 
@@ -33,6 +35,11 @@ class _VideoEditorState extends State<VideoEditor>
 
   @override
   Widget build(BuildContext context) {
+    var aspectRatio = videoPlayerController.size.aspectRatio;
+    if (aspectRatio == 0.0) {
+      aspectRatio = 16 / 9;
+    }
+
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         12,
@@ -42,36 +49,22 @@ class _VideoEditorState extends State<VideoEditor>
       ),
       child: Column(
         children: [
-          StreamBuilder(
-            stream: videoPlayerController.aspectRatioStream,
-            builder: (context, asyncSnapshot) {
-              // print(asyncSnapshot.data);
-              return AspectRatio(
-                aspectRatio:
-                    videoPlayerController.aspectRatio ??
-                    asyncSnapshot.data ??
-                    1,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: VideoPlayer(controller: videoPlayerController),
-                ),
-              );
-            },
+          AspectRatio(
+            aspectRatio: aspectRatio,
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: VideoPlayer(controller: videoPlayerController),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: StreamBuilder(
-              stream: videoPlayerController.durationStream,
-              builder: (context, snapshot) {
-                return VideoPlaybackControls(
-                  controller: videoPlayerController,
-                  duration: snapshot.data,
-                );
-              },
+            child: VideoPlaybackControls(
+              controller: videoPlayerController,
+              duration: videoPlayerController.duration,
             ),
           ),
 
@@ -96,8 +89,24 @@ class _VideoEditorState extends State<VideoEditor>
                       tint: tint,
                     );
 
-                    videoExporter.progressStream.listen((progress) {
-                      print('Progress: $progress');
+                    videoExporter.progressStream.listen((progress) async {
+                      if (progress < 1) {
+                        return;
+                      }
+                      pickedFile =
+                          '${(await getApplicationDocumentsDirectory()).path}/output.mp4';
+
+                      final stats = File(pickedFile!).statSync();
+                      if (stats.size > 0) {
+                        print('saving to gallery');
+
+                        if ((await Permission.storage.request()) ==
+                            PermissionStatus.granted) {
+                          GallerySaver.saveVideo(pickedFile!);
+                        }
+
+                        print('saving to gallery done');
+                      }
                     });
                   },
                   label: Text('Export Video'),
@@ -116,22 +125,17 @@ class _VideoEditorState extends State<VideoEditor>
               ),
 
               Expanded(
-                child: StreamBuilder(
-                  stream: videoPlayerController.durationStream,
-                  builder: (context, asyncSnapshot) {
-                    return FilledButton.tonalIcon(
-                      onPressed: asyncSnapshot.hasData ? resetFilters : null,
-                      icon: Icon(Symbols.filter),
-                      label: Text('Reset Filter'),
-                      style: FilledButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.fromHeight(45),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    );
-                  },
+                child: FilledButton.tonalIcon(
+                  onPressed: resetFilters,
+                  icon: Icon(Symbols.filter),
+                  label: Text('Reset Filter'),
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.fromHeight(45),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
               ),
 
@@ -157,42 +161,31 @@ class _VideoEditorState extends State<VideoEditor>
 
           const SizedBox(height: 20),
 
-          StreamBuilder(
-            stream: videoPlayerController.durationStream,
-            builder: (context, asyncSnapshot) {
-              if (asyncSnapshot.hasData) {
-                return FiltersPanel(
-                  tint: tint,
-                  lutFile: lutFile,
-                  exposure: exposure,
-                  contrast: contrast,
-                  saturation: saturation,
-                  temperature: temperature,
-                  lutFileToggle: lutFileToggle,
-
-                  onTintChanged: onTintChanged,
-                  onExposureChanged: onExposureChanged,
-                  onContrastChanged: onContrastChanged,
-                  onSaturationChanged: onSaturationChanged,
-                  onTemperatureChanged: onTemperatureChanged,
-
-                  onFilterChangeStart: onFilterChangeStart,
-                  onFilterChangeEnd: onFilterChangeEnd,
-                  onLutFileSelected: onLutFileSelected,
-                  onLutFileToggle: onLutFileToggle,
-                );
-              }
-
-              return FiltersPanel(
-                tint: tint,
-                exposure: exposure,
-                contrast: contrast,
-                lutFileToggle: false,
-                saturation: saturation,
-                temperature: temperature,
-              );
-            },
-          ),
+          // StreamBuilder(
+          //   stream: videoPlayerController.durationStream,
+          //   builder: (context, asyncSnapshot) {
+          //     if (asyncSnapshot.hasData) {
+          //         tint: tint,
+          //         lutFile: lutFile,
+          //         exposure: exposure,
+          //         contrast: contrast,
+          //         saturation: saturation,
+          //         temperature: temperature,
+          //         lutFileToggle: lutFileToggle,
+          //
+          //         onTintChanged: onTintChanged,
+          //         onExposureChanged: onExposureChanged,
+          //         onContrastChanged: onContrastChanged,
+          //         onSaturationChanged: onSaturationChanged,
+          //         onTemperatureChanged: onTemperatureChanged,
+          //
+          //         onFilterChangeStart: onFilterChangeStart,
+          //         onFilterChangeEnd: onFilterChangeEnd,
+          //         onLutFileSelected: onLutFileSelected,
+          //         onLutFileToggle: onLutFileToggle,
+          //       );
+          //   },
+          // ),
         ],
       ),
     );
@@ -215,34 +208,34 @@ class _VideoEditorState extends State<VideoEditor>
   }
 
   void onExposureChanged(double exposure) {
-    videoPlayerController.setExposure(this.exposure = exposure);
+    // videoPlayerController.setExposure(this.exposure = exposure);
     setState(() {});
   }
 
   void onContrastChanged(double contrast) {
-    videoPlayerController.setContrast(this.contrast = contrast);
+    // videoPlayerController.setContrast(this.contrast = contrast);
     setState(() {});
   }
 
   void onSaturationChanged(double saturation) {
-    videoPlayerController.setSaturation(this.saturation = saturation);
-    setState(() {});
+    // videoPlayerController.setSaturation(this.saturation = saturation);
+    // setState(() {});
   }
 
   void onTemperatureChanged(double temperature) {
-    videoPlayerController.setTemperature(this.temperature = temperature);
-    setState(() {});
+    // videoPlayerController.setTemperature(this.temperature = temperature);
+    // setState(() {});
   }
 
   void onTintChanged(double tint) {
-    videoPlayerController.setTint(this.tint = tint);
-    setState(() {});
+    // videoPlayerController.setTint(this.tint = tint);
+    // setState(() {});
   }
 
   void onLutFileSelected(String path) {
     lutFile = path;
     if (lutFileToggle) {
-      videoPlayerController.loadFilterFile(path);
+      // videoPlayerController.loadFilterFile(path);
     }
 
     setState(() {});
@@ -251,10 +244,10 @@ class _VideoEditorState extends State<VideoEditor>
   void onLutFileToggle(bool? toggle) {
     toggle = toggle == true;
     if (toggle && lutFile != null) {
-      lutFileToggle = toggle;
-      videoPlayerController.loadFilterFile(lutFile!);
+      // lutFileToggle = toggle//;
+      // videoPlayerController.loadFilterFile(lutFile!);
     } else {
-      videoPlayerController.removeFilterFile();
+      // videoPlayerController.removeFilterFile();
       lutFileToggle = toggle;
     }
 
@@ -262,31 +255,30 @@ class _VideoEditorState extends State<VideoEditor>
   }
 
   void resetFilters() {
-    videoPlayerController.setTint(tint = 0.8);
-    videoPlayerController.setExposure(exposure = 0.0);
-    videoPlayerController.setContrast(contrast = 1.0);
-    videoPlayerController.setSaturation(saturation = 1.0);
-    videoPlayerController.setTemperature(temperature = 6500.0);
+    videoPlayerController.setAndApplyFilters(tint: -150);
+    // videoPlayerController.setTint(tint = 0.8);
+    // videoPlayerController.setExposure(exposure = 0.0);
+    // videoPlayerController.setContrast(contrast = 1.0);
+    // videoPlayerController.setSaturation(saturation = 1.0);
+    // videoPlayerController.setTemperature(temperature = 6500.0);
 
     setState(() {});
   }
 
   void loadVideoFile() async {
-    pickedFile =
-        '${(await getApplicationDocumentsDirectory()).path}/output.mp4';
-
-    print(pickedFile);
-    print(File(pickedFile!).statSync());
-    videoPlayerController.loadFilterFile(pickedFile!);
-    final file = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.platform.pickFiles(
       type: FileType.video,
       allowMultiple: false,
     );
 
-    if (file != null) {
-      pickedFile = file.paths[0];
-      videoPlayerController.loadFileVideo(pickedFile!);
+    if (result != null) {
+      await videoPlayerController.loadFile(File(result.files[0]!.path!));
+      setState(() {});
     }
+
+    Future.delayed(Duration(seconds: 5), () {
+      setState(() {});
+    });
   }
 
   @override
@@ -447,7 +439,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
   }
 
   void replay(int seconds) async {
-    widget.controller.seekTo(
+    widget.controller.seek(
       Duration(seconds: max(0, progress.inSeconds - seconds)).inMilliseconds,
     );
   }
@@ -461,7 +453,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
   }
 
   void forward(int seconds) async {
-    widget.controller.seekTo(
+    widget.controller.seek(
       Duration(
         seconds: min(widget.duration!.inSeconds, progress.inSeconds + seconds),
       ).inMilliseconds,
@@ -477,7 +469,7 @@ class _VideoPlaybackControlsState extends State<VideoPlaybackControls>
   }
 
   void seekTo(double value) {
-    widget.controller.seekTo(value.round());
+    widget.controller.seek(value.round());
   }
 
   @override

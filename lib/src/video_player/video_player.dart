@@ -44,8 +44,8 @@ final class VideoPlayerController extends ChangeNotifier {
   factory VideoPlayerController() {
     final controller = VideoPlayerController._(
       switch (defaultTargetPlatform) {
-        TargetPlatform.iOS => VideoPlayerDarwinApi(),
-        TargetPlatform.android => VideoPlayerAndroidApi(),
+        // TargetPlatform.iOS => VideoPlayerDarwinApi(),
+        // TargetPlatform.android => VideoPlayerAndroidApi(),
         _ => throw UnimplementedError(),
       },
       ++_nextId,
@@ -70,7 +70,7 @@ final class VideoPlayerController extends ChangeNotifier {
   final VideoPlayerPlatformApi _api;
 
   ///
-  Stream<VideoPlayerState> get stateStream => _api.stateStream;
+  // Stream<VideoPlayerState> get stateStream => _api.stateStream;
 
   ///
   Stream<Duration> get progressStream => _api.progressStream;
@@ -88,7 +88,7 @@ final class VideoPlayerController extends ChangeNotifier {
   Duration? get duration => _api.duration;
 
   ///
-  VideoPlayerState? get state => _api.state;
+  // VideoPlayerState? get state => _api.state;
 
   ///
   double? get aspectRatio => _api.aspectRatio;

@@ -7,22 +7,24 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: TextButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => Scaffold(
-                  appBar: AppBar(title: Text('Media Filters')),
-                  body: VideoEditor(),
-                ),
-              ),
-            );
-          },
-          child: Text('Open'),
-        ),
-      ),
-    );
+    return Scaffold(appBar: AppBar(), body: VideoEditor());
+
+    // return Scaffold(
+    //   body: Center(
+    //     child: TextButton(
+    //       onPressed: () {
+    //         Navigator.of(context).push(
+    //           MaterialPageRoute(
+    //             builder: (context) => Scaffold(
+    //               appBar: AppBar(title: Text('Media Filters')),
+    //               body: VideoEditor(),
+    //             ),
+    //           ),
+    //         );
+    //       },
+    //       child: Text('Open'),
+    //     ),
+    //   ),
+    // );
   }
 }

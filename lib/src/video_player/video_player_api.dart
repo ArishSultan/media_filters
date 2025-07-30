@@ -12,9 +12,9 @@ import 'video_player_state.dart';
 /// similar mechanism.
 abstract class VideoPlayerPlatformApi {
   ///
-  Stream<VideoPlayerState> get stateStream;
-
-  VideoPlayerState? get state;
+  // Stream<VideoPlayerState> get stateStream;
+  //
+  // VideoPlayerState? get state;
 
   ///
   Stream<Duration> get progressStream;
