@@ -446,7 +446,7 @@ extension VideoPlayer {
   ///   - playerId: Unique identifier for the player
   ///   - progressListener: Callback for progress updates
   /// - Returns: VideoPlayer instance (existing or newly created)
-  public static func create(
+  public static func prepare(
     playerId: Int,
     stateListener: @escaping IntValueCallback,
     progressListener: @escaping LongValueCallback,
@@ -479,7 +479,7 @@ extension VideoPlayer {
   
   /// Removes a specific player instance and releases its resources
   /// - Parameter playerId: Unique identifier of the player to remove
-  public static func remove(_ playerId: Int) {
+  public static func release(_ playerId: Int) {
     lock.lock()
     let playerToRemove = players.removeValue(forKey: playerId)
     lock.unlock()
@@ -492,7 +492,7 @@ extension VideoPlayer {
   }
   
   /// Removes all player instances and releases their resources
-  public static func removeAll() {
+  public static func releaseAll() {
     lock.lock()
     let allPlayers = Array(players.values)
     players.removeAll()

@@ -24,7 +24,7 @@ func vpCreate(
   stateListener: IntValueCallback,
   progressListener: LongValueCallback,
 ) {
-  VideoPlayer.create(
+  VideoPlayer.prepare(
     playerId: playerId,
     stateListener: stateListener,
     progressListener: progressListener,
@@ -33,8 +33,8 @@ func vpCreate(
 
 ///
 @_cdecl("vpRelease")
-func vpRemove(playerId: Int) {
-  VideoPlayer.remove(playerId)
+func vpRelease(playerId: Int) {
+  VideoPlayer.release(playerId)
 }
 
 ///
