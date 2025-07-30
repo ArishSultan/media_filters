@@ -80,19 +80,19 @@ final class VideoPlayerController {
     }
 
     if (contrast != null) {
-      _api.setTintFilter(_playerId, contrast);
+      _api.setContrastFilter(_playerId, contrast);
     }
 
     if (exposure != null) {
-      _api.setTintFilter(_playerId, exposure);
+      _api.setExposureFilter(_playerId, exposure);
     }
 
     if (saturation != null) {
-      _api.setTintFilter(_playerId, saturation);
+      _api.setSaturationFilter(_playerId, saturation);
     }
 
     if (temperature != null) {
-      _api.setTintFilter(_playerId, temperature);
+      _api.setTemperatureFilter(_playerId, temperature);
     }
   }
 
