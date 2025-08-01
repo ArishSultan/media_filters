@@ -50,7 +50,7 @@ class _VideoEditorState extends State<VideoEditor>
       child: Column(
         children: [
           AspectRatio(
-            aspectRatio: aspectRatio,
+            aspectRatio: aspectRatio.abs(),
             child: Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
@@ -82,6 +82,7 @@ class _VideoEditorState extends State<VideoEditor>
 
                     VideoTransformer()
                         .transform(
+                          size: Size(640, 360),
                           srcPath: pickedFile!,
                           dstPath: dstPath,
                           lutFile: lutFile,
