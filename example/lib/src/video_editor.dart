@@ -84,7 +84,7 @@ class _VideoEditorState extends State<VideoEditor>
 
                     VideoTransformer()
                         .transform(
-                          size: Size(640, 360),
+                          size: videoPlayerController.size,
                           srcPath: pickedFile!,
                           dstPath: dstPath,
                           lutFile: lutFile,

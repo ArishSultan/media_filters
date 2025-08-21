@@ -259,7 +259,7 @@ public class VideoTransformer {
               let sourceImage = CIImage(cvPixelBuffer: pixelBuffer)
               filter.setValue(sourceImage, forKey: kCIInputImageKey)
 
-              let sourceColorSpace = sourceImage.colorSpace ?? CGColorSpace.sRGB
+              let sourceColorSpace = sourceImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
 
               if let filteredImage = filter.outputImage {
                 CVPixelBufferLockBaseAddress(outputBuffer, [])
