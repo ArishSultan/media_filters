@@ -10,6 +10,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'filters_panel.dart';
+
 class VideoEditor extends StatefulWidget {
   const VideoEditor({super.key});
 
@@ -178,31 +180,27 @@ class _VideoEditorState extends State<VideoEditor>
 
           const SizedBox(height: 20),
 
-          // StreamBuilder(
-          //   stream: videoPlayerController.durationStream,
-          //   builder: (context, asyncSnapshot) {
-          //     if (asyncSnapshot.hasData) {
-          //         tint: tint,
-          //         lutFile: lutFile,
-          //         exposure: exposure,
-          //         contrast: contrast,
-          //         saturation: saturation,
-          //         temperature: temperature,
-          //         lutFileToggle: lutFileToggle,
           //
-          //         onTintChanged: onTintChanged,
-          //         onExposureChanged: onExposureChanged,
-          //         onContrastChanged: onContrastChanged,
-          //         onSaturationChanged: onSaturationChanged,
-          //         onTemperatureChanged: onTemperatureChanged,
-          //
-          //         onFilterChangeStart: onFilterChangeStart,
-          //         onFilterChangeEnd: onFilterChangeEnd,
-          //         onLutFileSelected: onLutFileSelected,
-          //         onLutFileToggle: onLutFileToggle,
-          //       );
-          //   },
-          // ),
+          FiltersPanel(
+            tint: tint,
+            lutFile: lutFile,
+            exposure: exposure,
+            contrast: contrast,
+            saturation: saturation,
+            temperature: temperature,
+            lutFileToggle: lutFileToggle,
+
+            onTintChanged: onTintChanged,
+            onExposureChanged: onExposureChanged,
+            onContrastChanged: onContrastChanged,
+            onSaturationChanged: onSaturationChanged,
+            onTemperatureChanged: onTemperatureChanged,
+
+            onFilterChangeStart: onFilterChangeStart,
+            onFilterChangeEnd: onFilterChangeEnd,
+            onLutFileSelected: onLutFileSelected,
+            onLutFileToggle: onLutFileToggle,
+          )
         ],
       ),
     );
@@ -225,34 +223,34 @@ class _VideoEditorState extends State<VideoEditor>
   }
 
   void onExposureChanged(double exposure) {
-    // videoPlayerController.setExposure(this.exposure = exposure);
+    videoPlayerController.setAndApplyFilters(exposure: this.exposure = exposure);
     setState(() {});
   }
 
   void onContrastChanged(double contrast) {
-    // videoPlayerController.setContrast(this.contrast = contrast);
+    videoPlayerController.setAndApplyFilters(contrast: this.contrast = contrast);
     setState(() {});
   }
 
   void onSaturationChanged(double saturation) {
-    // videoPlayerController.setSaturation(this.saturation = saturation);
-    // setState(() {});
+    videoPlayerController.setAndApplyFilters(saturation: this.saturation = saturation);
+    setState(() {});
   }
 
   void onTemperatureChanged(double temperature) {
-    // videoPlayerController.setTemperature(this.temperature = temperature);
-    // setState(() {});
+    videoPlayerController.setAndApplyFilters(temperature: this.temperature = temperature);
+    setState(() {});
   }
 
   void onTintChanged(double tint) {
-    // videoPlayerController.setTint(this.tint = tint);
-    // setState(() {});
+    videoPlayerController.setAndApplyFilters(tint: this.tint = tint);
+    setState(() {});
   }
 
   void onLutFileSelected(String path) {
     lutFile = path;
     if (lutFileToggle) {
-      // videoPlayerController.loadFilterFile(path);
+      videoPlayerController.setLutFilter(path);
     }
 
     setState(() {});
@@ -272,12 +270,13 @@ class _VideoEditorState extends State<VideoEditor>
   }
 
   void resetFilters() {
-    videoPlayerController.setAndApplyFilters(temperature: temperature = 200);
-    // videoPlayerController.setTint(tint = 0.8);
-    // videoPlayerController.setExposure(exposure = 0.0);
-    // videoPlayerController.setContrast(contrast = 1.0);
-    // videoPlayerController.setSaturation(saturation = 1.0);
-    // videoPlayerController.setTemperature(temperature = 6500.0);
+    videoPlayerController.setAndApplyFilters(
+      tint: tint = kDefaultTint,
+      exposure: exposure = kDefaultExposure,
+      contrast: contrast = kDefaultContrast,
+      saturation: saturation = kDefaultSaturation,
+      temperature: temperature = kDefaultTemperature,
+    );
 
     setState(() {});
   }

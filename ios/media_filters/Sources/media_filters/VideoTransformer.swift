@@ -157,7 +157,7 @@ public class VideoTransformer {
       var ciContext: CIContext
       if let metalDevice = MTLCreateSystemDefaultDevice() {
         ciContext = CIContext(mtlDevice: metalDevice, options: [
-          .workingColorSpace: CGColorSpaceCreateDeviceRGB(),
+          .workingColorSpace: CGColorSpace(name: CGColorSpace.linearSRGB)!,
           .outputPremultiplied: true,
           .cacheIntermediates: false,
           .name: "VideoTransformer",
@@ -166,7 +166,7 @@ public class VideoTransformer {
       } else {
         // Fallback to non-Metal context
         ciContext = CIContext(options: [
-          .workingColorSpace: CGColorSpaceCreateDeviceRGB(),
+          .workingColorSpace: CGColorSpace(name: CGColorSpace.linearSRGB)!,
           .outputPremultiplied: true,
           .useSoftwareRenderer: false
         ])
@@ -227,10 +227,16 @@ public class VideoTransformer {
               let sourceImage = CIImage(cvPixelBuffer: pixelBuffer)
               filter.setValue(sourceImage, forKey: kCIInputImageKey)
               
+              let sourceColorSpace = sourceImage.colorSpace ?? CGColorSpace.sRGB
+              
               if let filteredImage = filter.outputImage {
                 // Clear the output buffer first (important for transparency)
                 CVPixelBufferLockBaseAddress(outputBuffer, [])
-                ciContext.render(filteredImage, to: outputBuffer, bounds: filteredImage.extent, colorSpace: colorSpace)
+                ciContext.render(
+                  filteredImage, to: outputBuffer,
+                  bounds: filteredImage.extent,
+                  colorSpace: sourceColorSpace
+                )
                 CVPixelBufferUnlockBaseAddress(outputBuffer, [])
                 
                 // Serialize append operations

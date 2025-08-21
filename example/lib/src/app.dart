@@ -9,6 +9,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       home: HomeView(),
       theme: ThemeData(
+        brightness: Brightness.dark,
         progressIndicatorTheme: ProgressIndicatorThemeData(
           strokeCap: StrokeCap.round,
         ),
