@@ -19,7 +19,7 @@ struct CSize {
 
 ///
 @_cdecl("vpPrepare")
-func vpCreate(
+public func vpPrepare(
   playerId: Int,
   stateListener: IntValueCallback,
   progressListener: LongValueCallback,
@@ -33,25 +33,25 @@ func vpCreate(
 
 ///
 @_cdecl("vpRelease")
-func vpRelease(playerId: Int) {
+public func vpRelease(playerId: Int) {
   VideoPlayer.release(playerId)
 }
 
 ///
 @_cdecl("vpState")
-func vpState(playerId: Int) -> Int {
+public func vpState(playerId: Int) -> Int {
   VideoPlayer.get(playerId)?.getState().rawValue ?? 0
 }
 
 ///
 @_cdecl("vpApplyFilter")
-func vpApplyFilter(playerId: Int) {
+public func vpApplyFilter(playerId: Int) {
   VideoPlayer.get(playerId)?.applyFilter()
 }
 
 ///
 @_cdecl("vpSize")
-func vpSize(playerId: Int) -> UnsafeMutableRawPointer {
+public func vpSize(playerId: Int) -> UnsafeMutableRawPointer {
   let sizePtr = UnsafeMutablePointer<CSize>.allocate(capacity: 1)
   if let resolution = VideoPlayer.get(playerId)?.getVideoResolution() {
     print("i am here, \(resolution)")
@@ -63,13 +63,13 @@ func vpSize(playerId: Int) -> UnsafeMutableRawPointer {
 
 ///
 @_cdecl("vpDuration")
-func vpDuration(playerId: Int) -> Int64 {
+public func vpDuration(playerId: Int) -> Int64 {
   VideoPlayer.get(playerId)?.getDuration() ?? -1
 }
 
 ///
 @_cdecl("vpProgress")
-func vpProgress(playerId: Int) -> Int64 {
+public func vpProgress(playerId: Int) -> Int64 {
   VideoPlayer.get(playerId)?.getCurrentTime() ?? -1
 }
 
@@ -151,7 +151,7 @@ public func vpSetTint(playerId: Int, value: Float) {
 }
 
 @_cdecl("transformVideo")
-func transformVideo(
+public func transformVideo(
   id: Int,
   
   //
