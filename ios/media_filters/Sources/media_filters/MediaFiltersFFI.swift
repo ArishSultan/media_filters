@@ -9,7 +9,6 @@ public typealias FloatValueCallback = @convention(c) (Int, Float) -> Void
 public typealias DoubleValueCallback = @convention(c) (Int, Double) -> Void
 public typealias StringValueCallback = @convention(c) (Int, UnsafePointer<CChar>) -> Void
 
-
 struct CSize {
   let width: Double
   let height: Double
@@ -28,7 +27,7 @@ public func vpPrepare(
     playerId: playerId,
     stateListener: stateListener,
     progressListener: progressListener,
-  );
+  )
 }
 
 ///
@@ -57,7 +56,7 @@ public func vpSize(playerId: Int) -> UnsafeMutableRawPointer {
     print("i am here, \(resolution)")
     sizePtr.pointee = CSize(width: resolution.width, height: resolution.height)
   }
-  
+
   return UnsafeMutableRawPointer(sizePtr)
 }
 
@@ -83,7 +82,7 @@ public func vpLoad(
   onLoadError: StringValueCallback,
 ) {
   guard let player = VideoPlayer.get(playerId) else { return }
-  
+
   return player.load(
     locator: String(cString: resource),
     resourceType: VideoResourceType(rawValue: resourceType),
@@ -115,7 +114,7 @@ public func vpLoadLutFilter(playerId: Int, resource: UnsafePointer<CChar>) {
   guard let player = VideoPlayer.get(playerId) else {
     return
   }
-  
+
   let lutUrl = URL(fileURLWithPath: String(cString: resource))
   player.mediaFilters.loadLutFilter(lutUrl: lutUrl)
 }
@@ -153,53 +152,57 @@ public func vpSetTint(playerId: Int, value: Float) {
 @_cdecl("transformVideo")
 public func transformVideo(
   id: Int,
-  
+
   //
   width: Float,
   height: Float,
   preserveAspectRatio: Bool,
-  
+
   //
   tint: Float,
   contrast: Float,
   exposure: Float,
   saturation: Float,
   temperature: Float,
-  
+  overlayPath: UnsafePointer<CChar>?,
   //
   lutFile: UnsafePointer<CChar>?,
   srcFile: UnsafePointer<CChar>,
   dstFile: UnsafePointer<CChar>,
-  
+
   //
   onProgress: FloatValueCallback,
   onCompletion: VoidCallback,
   onError: StringValueCallback,
 ) {
   let filters = MediaFilters()
-  
+
   if lutFile != nil {
     let lutUrl = URL(fileURLWithPath: String(cString: lutFile!))
     filters.loadLutFilter(lutUrl: lutUrl)
   }
-  
+
   filters.contrast = contrast
   filters.saturation = saturation
   filters.exposure = exposure
   filters.temperature = temperature
   filters.tint = tint
-  
+
+  if let overlayPath = overlayPath  {
+    filters.overlayPath = String(cString: overlayPath)
+  }
+
   VideoTransformer.transform(
     id: id,
-    
+
     width: width,
     height: height,
     preserveAspectRatio: preserveAspectRatio,
-    
+
     srcUrl: URL(fileURLWithPath: String(cString: srcFile)),
     dstUrl: URL(fileURLWithPath: String(cString: dstFile)),
     filters: filters,
-    
+
     onProgress: onProgress,
     onCompletion: onCompletion,
     onError: onError,

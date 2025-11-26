@@ -20,6 +20,7 @@ final class VideoTransformerDarwin implements VideoTransformer {
     Size? size,
     bool preserveAspectRatio = true,
     String? lutFile,
+    String? overlayPath,
     double tint = kDefaultTint,
     double contrast = kDefaultContrast,
     double exposure = kDefaultExposure,
@@ -34,6 +35,7 @@ final class VideoTransformerDarwin implements VideoTransformer {
     final srcPathPtr = srcPath.toNativeUtf8();
     final dstPathPtr = dstPath.toNativeUtf8();
     final lutPathPtr = lutFile?.toNativeUtf8() ?? nullptr;
+    final overlayPathPtr = overlayPath?.toNativeUtf8() ?? nullptr;
 
     darwinFFI.transformVideo(
       id,
@@ -45,6 +47,7 @@ final class VideoTransformerDarwin implements VideoTransformer {
       exposure,
       saturation,
       temperature,
+      overlayPathPtr,
       lutPathPtr,
       srcPathPtr,
       dstPathPtr,

@@ -24,8 +24,8 @@ dev_dependencies:
 flutter:
   plugin:
     platforms:
-      android:
-        package: dev.arish.media_filters
-        pluginClass: MediaFiltersPlugin
+#      android:
+#        package: dev.arish.media_filters
+#        pluginClass: MediaFiltersPlugin
       ios:
         pluginClass: MediaFiltersPlugin

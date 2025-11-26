@@ -27,6 +27,7 @@ abstract interface class VideoTransformer {
     double contrast = kDefaultContrast,
     double saturation = kDefaultSaturation,
     double temperature = kDefaultTemperature,
+    String? overlayPath,
     required String srcPath,
     required String dstPath,
   });
