@@ -214,14 +214,17 @@ public class CustomCompositeFilter: CIFilter {
     }
 
     if let overlayPath = filterSettings.overlayPath {
-      let colorBlendFilter = CIFilter.overlayBlendMode()
+      let colorBlendFilter = CIFilter.sourceOverCompositing()
 
-      let imageUrl = URL(fileURLWithPath: imagePath)
-      let ciImage = CIImage(contentsOf: imageUrl)
+      // print("OVERLAYPATH \(overlayPath)")
+      // let imageUrl = URL(fileURLWithPath: overlayPath)
+      // let backgroundImage = CIImage(contentsOf: imageUrl)
 
-      // TODO(arbaz): input image will be the watermark
-      // colorBlendFilter.inputImage = inputImage
-      colorBlendFilter.backgroundImage = backgroundImage
+      // colorBlendFilter.inputImage = backgroundImage
+      // colorBlendFilter.backgroundImage = backgroundImage
+
+      cachedFilterChain.append(colorBlendFilter)
+
     }
 
   }
@@ -233,7 +236,27 @@ public class CustomCompositeFilter: CIFilter {
 
     // Apply all cached filters in sequence
     for filter in cachedFilterChain {
-      filter.setValue(currentImage, forKey: kCIInputImageKey)
+      let overlayFilter = filter as? CICompositeOperation
+      print("FILTER NAME \(filter.name) \(overlayFilter)")
+      // if filter is CICompositeOperation && filter.name == "CIOverlayBlendMode"{
+      let backgroundImageKey = kCIInputBackgroundImageKey
+      // TODO(arbaz): This branch will apply to all filters that contain the backgroundkey.
+      if filter.inputKeys.contains(backgroundImageKey) {
+
+          if let overlayPath = filterSettings.overlayPath {
+            print("APPLYING OVERLAY FILTER \(overlayPath)")
+            let imageUrl = URL(fileURLWithPath: overlayPath)
+            let overlayImage = CIImage(contentsOf: imageUrl)
+
+            filter.setValue(overlayImage, forKey: kCIInputImageKey)
+            // overlayFilter.backgroundImage = currentImage
+            filter.setValue(currentImage, forKey: backgroundImageKey)
+          }
+
+      } else {
+        print("APPLYING NORMAL FILTER")
+        filter.setValue(currentImage, forKey: kCIInputImageKey)
+      }
       guard let output = filter.outputImage else { return nil }
       currentImage = output
     }

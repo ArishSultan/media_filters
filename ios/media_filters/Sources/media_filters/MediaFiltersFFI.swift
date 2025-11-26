@@ -187,7 +187,10 @@ public func transformVideo(
   filters.exposure = exposure
   filters.temperature = temperature
   filters.tint = tint
-  filters.overlayPath = String(cString: overlayPath)
+
+  if let overlayPath = overlayPath  {
+    filters.overlayPath = String(cString: overlayPath)
+  }
 
   VideoTransformer.transform(
     id: id,
