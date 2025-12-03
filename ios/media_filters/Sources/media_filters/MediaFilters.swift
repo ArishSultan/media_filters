@@ -116,7 +116,11 @@ public class MediaFilters {
   }
 
   public var ciFilter: CIFilter {
-    return CustomCompositeFilter(filters: self)
+    return CustomCompositeFilter(filters: self, isInverted: false)
+  }
+
+  public func getCiFilter(_ isInverted: Bool) -> CIFilter {
+    return CustomCompositeFilter(filters: self, isInverted: isInverted)
   }
 
   public func unloadLutFilter() {
@@ -156,11 +160,13 @@ public class MediaFilters {
 public class CustomCompositeFilter: CIFilter {
   private let filterSettings: MediaFilters
   private var cachedFilterChain: [CIFilter] = []
+  private var isInverted: Bool
 
   @objc dynamic var inputImage: CIImage?
 
-  init(filters: MediaFilters) {
+  init(filters: MediaFilters, isInverted: Bool) {
     self.filterSettings = filters
+    self.isInverted  = isInverted
     super.init()
     buildFilterChain()
   }
@@ -246,11 +252,21 @@ public class CustomCompositeFilter: CIFilter {
           if let overlayPath = filterSettings.overlayPath {
             print("APPLYING OVERLAY FILTER \(overlayPath)")
             let imageUrl = URL(fileURLWithPath: overlayPath)
-            let overlayImage = CIImage(contentsOf: imageUrl)
+            if var overlayImage = CIImage(contentsOf: imageUrl) {
 
-            filter.setValue(overlayImage, forKey: kCIInputImageKey)
-            // overlayFilter.backgroundImage = currentImage
-            filter.setValue(currentImage, forKey: backgroundImageKey)
+              // inside CustomCompositeFilter.swift
+
+              print("OVERLAY isInverted \(self.isInverted)")
+              if self.isInverted {
+                overlayImage = overlayImage.transformed(by: CGAffineTransform(scaleX: -1, y: -1)) // Flip Vertical only
+                overlayImage = overlayImage.transformed(by: CGAffineTransform(translationX: overlayImage.extent.width, y: overlayImage.extent.height))
+              }
+
+              filter.setValue(overlayImage, forKey: kCIInputImageKey)
+              // overlayFilter.backgroundImage = currentImage
+              filter.setValue(currentImage, forKey: backgroundImageKey)
+
+           }
           }
 
       } else {

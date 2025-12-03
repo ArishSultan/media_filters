@@ -50,6 +50,7 @@ public class VideoTransformer {
 
         // Get original transform
         preferredTransform = videoTrack.preferredTransform
+        // print("PREFFERED TRANSFORM \(preferredTransform.isIdentity)  a: \(preferredTransform.a)\nb: \(preferredTransform.b)\nc: \(preferredTransform.c)\nd: \(preferredTransform.d)\ntx: \(preferredTransform.tx)\nty: \(preferredTransform.ty) ")
 
         // Calculate the target video size
         let naturalSize = videoTrack.naturalSize
@@ -209,7 +210,7 @@ public class VideoTransformer {
         ])
       }
 
-      let filter: CIFilter = filters.ciFilter
+      let filter: CIFilter = filters.getCiFilter(!preferredTransform.isIdentity)
 
       var pixelBufferCache: [CVPixelBuffer] = []
       for _ in 0..<3 {
@@ -256,57 +257,75 @@ public class VideoTransformer {
               }
 
               // Apply filters
-              let sourceImage = CIImage(cvPixelBuffer: pixelBuffer)
-              filter.setValue(sourceImage, forKey: kCIInputImageKey)
+              // 1. Create the raw image
+              let rawImage = CIImage(cvPixelBuffer: pixelBuffer)
 
-              let sourceColorSpace = sourceImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
+              // 2. DETECT ORIENTATION CORRECTLY
+              // This logic checks if the video has a rotation metadata (preferredTransform).
+              // If it does (like iOS Portrait video), we apply it to make the image Upright.
+              // If it doesn't (like a Landscape video or pre-rendered Android video), this transform is likely .identity.
 
-              if let filteredImage = filter.outputImage {
-                CVPixelBufferLockBaseAddress(outputBuffer, [])
+              var workingImage = rawImage.transformed(by: preferredTransform)
 
-                // Create clear background
-                let clearColor = CIColor(red: 0, green: 0, blue: 0, alpha: 0)
-                let clearImage = CIImage(color: clearColor)
-                  .cropped(to: CGRect(x: 0, y: 0,
-                                     width: targetStorageSize.width,
-                                     height: targetStorageSize.height))
+              // CORRECTION 1: Fix Origin Shift
+              // Rotations often throw the image origin into negative coordinates.
+              // We force the origin back to (0,0) so the filter applies at the correct "bottom-left" of the visible area.
+              workingImage = workingImage.transformed(by: CGAffineTransform(
+                  translationX: -workingImage.extent.origin.x,
+                  y: -workingImage.extent.origin.y
+              ))
 
-                // Calculate aspect-preserving scale
-                let sourceAspect = filteredImage.extent.width / filteredImage.extent.height
-                let targetAspect = targetStorageSize.width / targetStorageSize.height
+              // 3. APPLY FILTER
+              // Now workingImage is guaranteed to be "Upright" and at (0,0).
+              filter.setValue(workingImage, forKey: kCIInputImageKey)
 
-                var scale: CGFloat
-                if sourceAspect > targetAspect {
-                  scale = targetStorageSize.width / filteredImage.extent.width
-                } else {
-                  scale = targetStorageSize.height / filteredImage.extent.height
-                }
+              guard let filteredImage = filter.outputImage else {
+                  processingSemaphore.signal()
+                  CMSampleBufferInvalidate(sampleBuffer)
+                  return
+              }
 
-                // Apply scale transform
-                let scaledImage = filteredImage.transformed(by: CGAffineTransform(
-                  scaleX: scale,
-                  y: scale
-                ))
+              // 4. PREPARE FOR OUTPUT
+              // The AVAssetWriter expects frames in the *original* raw orientation (e.g., sideways for Portrait video).
+              // We must undo the rotation we did in step 2.
 
-                // Center the image
-                let offsetX = (targetStorageSize.width - scaledImage.extent.width) / 2
-                let offsetY = (targetStorageSize.height - scaledImage.extent.height) / 2
-                let centeredImage = scaledImage.transformed(by: CGAffineTransform(
-                  translationX: offsetX,
-                  y: offsetY
-                ))
+              var finalImage = filteredImage.transformed(by: preferredTransform.inverted())
 
-                // Composite scaled image on clear background
-                let composite = centeredImage.composited(over: clearImage)
+              // CORRECTION 2: Fix Origin Shift (Again)
+              // The inverse rotation might also throw coordinates off. Fix them again.
+              finalImage = finalImage.transformed(by: CGAffineTransform(
+                  translationX: -finalImage.extent.origin.x,
+                  y: -finalImage.extent.origin.y
+              ))
 
-                ciContext.render(
-                  composite,
+              // 5. SCALE TO BUFFER
+              // This ensures that whether the video was Landscape or Portrait, 
+              // the final image fits perfectly into the pixel buffer we are about to write.
+              let targetWidth = CGFloat(CVPixelBufferGetWidth(outputBuffer))
+              let targetHeight = CGFloat(CVPixelBufferGetHeight(outputBuffer))
+
+              // We use the extent of the *rotated* image to calculate scale.
+              let scaleX = targetWidth / finalImage.extent.width
+              let scaleY = targetHeight / finalImage.extent.height
+
+              // Scale to fit (stretching if necessary to fill the buffer completely)
+              finalImage = finalImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+
+              // Center (safety measure)
+              let offsetX = (targetWidth - finalImage.extent.width) / 2
+              let offsetY = (targetHeight - finalImage.extent.height) / 2
+              finalImage = finalImage.transformed(by: CGAffineTransform(translationX: offsetX, y: offsetY))
+
+              // 6. RENDER
+              CVPixelBufferLockBaseAddress(outputBuffer, [])
+              ciContext.render(
+                  finalImage,
                   to: outputBuffer,
-                  bounds: composite.extent,
-                  colorSpace: sourceColorSpace
-                )
-
-                CVPixelBufferUnlockBaseAddress(outputBuffer, [])
+                  bounds: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight),
+                  colorSpace: rawImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
+              )
+              CVPixelBufferUnlockBaseAddress(outputBuffer, [])
+              // }
 
                 appendSemaphore.wait()
                 let appendSuccess = pixelBufferAdaptor.append(outputBuffer, withPresentationTime: presentationTime)
@@ -317,7 +336,7 @@ public class VideoTransformer {
                   reportError("Failed to append processed frame. Writer status: \(writer.status.rawValue)")
                   return
                 }
-              }
+              // }
 
               processingSemaphore.signal()
               CMSampleBufferInvalidate(sampleBuffer)
