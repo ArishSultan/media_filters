@@ -49,7 +49,7 @@ public class MediaFilters {
   private var _saturation = BoundedValue<Float>(min: 0.0, max: 2.0, initialValue: 1.0)
   private var _temperature = BoundedValue<Float>(min: 2000.0, max: 10000.0, initialValue: 6500.0)
 
-  public var overlayPath: String? = nil
+  public var overlayPath: URL? = nil
 
   // public var overlayPath: String? = {
   //   get { return _overlayPath }
@@ -60,6 +60,8 @@ public class MediaFilters {
 
   // Cache invalidation flag
   private var _filtersNeedUpdate = true
+
+
 
   public var lutFilter: CIFilter? {
     return _lutFilter
@@ -116,12 +118,12 @@ public class MediaFilters {
   }
 
   public var ciFilter: CIFilter {
-    return CustomCompositeFilter(filters: self, isInverted: false)
+    return CustomCompositeFilter(filters: self)
   }
 
-  public func getCiFilter(_ isInverted: Bool) -> CIFilter {
-    return CustomCompositeFilter(filters: self, isInverted: isInverted)
-  }
+  // public func getCiFilter(_ isInverted: Bool) -> CIFilter {
+  //   return CustomCompositeFilter(filters: self, isInverted: isInverted)
+  // }
 
   public func unloadLutFilter() {
     if _lutFilter != nil {
@@ -160,13 +162,79 @@ public class MediaFilters {
 public class CustomCompositeFilter: CIFilter {
   private let filterSettings: MediaFilters
   private var cachedFilterChain: [CIFilter] = []
-  private var isInverted: Bool
+  // private var isInverted: Bool
+  private var overlayImage: CIImage?  = nil
+  private var cachedOverlayImage: CIImage?   
+  private var lastInputSize: CGSize = .zero
 
-  @objc dynamic var inputImage: CIImage?
+  @objc dynamic var inputImage: CIImage? {
+    didSet {
+      guard let image = inputImage else { return }
+      
+        // let size = CGSize(width: image.extent.width, height: image.extent.height)
+      if image.extent.size != lastInputSize {
+        // print("Calculated Size \(size.width) \(image.extent.width) \(image.extent.height)")
+        updateOverlayGeometry(videoSize: image.extent.size)
+        lastInputSize = image.extent.size
+      }
+    }
+  }
 
-  init(filters: MediaFilters, isInverted: Bool) {
+
+  private func updateOverlayGeometry(videoSize: CGSize) {
+    guard let cleanOverlay = self.overlayImage else { 
+      cachedOverlayImage = nil
+      return 
+    }
+    
+    // // A. Scale Logic (e.g. 20% width)
+    let targetWidth =  if videoSize.width > videoSize.height {
+        videoSize.width * 0.2
+    } else {
+        videoSize.height * 0.2
+    }
+    
+    let scale = targetWidth / cleanOverlay.extent.width
+    // print("Scaling by \(targetWidth) with scale \(scale) cleanOVerlay SIze \(cleanOverlay.extent.width) \(videoSize.width)")
+    let scaledOverlay = cleanOverlay.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+    
+    // print("Scale IMage Size \(scaledOverlay.extent.width)x\(scaledOverlay.extent.height)")
+    // // B. Position Logic (Bottom-Right with padding)
+    let padding: CGFloat = 20.0
+    
+    // Core Image Coordinates: (0,0) is BOTTOM-Left
+    let targetX = videoSize.width - scaledOverlay.extent.width - padding
+    let targetY = padding 
+    
+    let translate = CGAffineTransform(
+        translationX: targetX - scaledOverlay.extent.origin.x,
+        y: targetY - scaledOverlay.extent.origin.y
+    )
+    
+    // Save the result to cache
+    self.cachedOverlayImage = scaledOverlay.transformed(by: translate)
+    // .transformed(by: 
+    //     CGAffineTransform(scaleX: 1, y: -1)
+    // ).transformed(by: 
+    //     CGAffineTransform(translationX: 0, y: videoSize.height)
+    // )
+
+
+    // self.cachedOverlayImage = scaledOverlay
+
+
+    // self.cachedOverlayImage = self.cachedOverlayImage.transformed(by: 
+    //     CGAffineTransform(scaleX: 1, y: -1)
+    // ).transformed(by: 
+    //     CGAffineTransform(translationX: 0, y: videoSize.height)
+    // )
+    
+    print("Overlay geometry updated for size: \(videoSize)")
+  }
+
+  init(filters: MediaFilters) {
     self.filterSettings = filters
-    self.isInverted  = isInverted
+    // self.isInverted  = isInverted
     super.init()
     buildFilterChain()
   }
@@ -188,6 +256,7 @@ public class CustomCompositeFilter: CIFilter {
   }
 
   private func buildFilterChain() {
+    print("Updating filter chain")
     cachedFilterChain.removeAll()
 
     // Build filter array based on which settings are active
@@ -228,12 +297,31 @@ public class CustomCompositeFilter: CIFilter {
 
       // colorBlendFilter.inputImage = backgroundImage
       // colorBlendFilter.backgroundImage = backgroundImage
+      // let imageUrl = URL(fileURLWithPath: overlayPath)
+      overlayImage = CIImage(contentsOf: overlayPath) 
+
+
+        // print("overimage isNull \(overlayImage == nil)")
+      // if var overlayImage = overlayImage {
+      //   // print("overimage isInverted \(self.isInverted)")
+      //   // if self.isInverted {
+      //   //   print("IMAGE INVERTED")
+      //   //   overlayImage = overlayImage.transformed(by: CGAffineTransform(scaleX: -1, y: -1)) // Flip Vertical only
+      //   //   overlayImage = overlayImage.transformed(by: CGAffineTransform(translationX: overlayImage.extent.width, y: overlayImage.extent.height))
+      //   // }
+
+      //   colorBlendFilter.setValue(overlayImage, forKey: kCIInputImageKey)
+      // }
 
       cachedFilterChain.append(colorBlendFilter)
+
 
     }
 
   }
+
+
+
 
   private func applyFilterChain(inputImage: CIImage) -> CIImage? {
     guard !cachedFilterChain.isEmpty else { return inputImage }
@@ -243,35 +331,43 @@ public class CustomCompositeFilter: CIFilter {
     // Apply all cached filters in sequence
     for filter in cachedFilterChain {
       let overlayFilter = filter as? CICompositeOperation
-      print("FILTER NAME \(filter.name) \(overlayFilter)")
+    //  print("FILTER NAME \(filter.name) \(overlayFilter)")
       // if filter is CICompositeOperation && filter.name == "CIOverlayBlendMode"{
-      let backgroundImageKey = kCIInputBackgroundImageKey
+      // let backgroundImageKey = kCIInputBackgroundImageKey
       // TODO(arbaz): This branch will apply to all filters that contain the backgroundkey.
-      if filter.inputKeys.contains(backgroundImageKey) {
+      if filter.inputKeys.contains(kCIInputBackgroundImageKey) {
 
-          if let overlayPath = filterSettings.overlayPath {
-            print("APPLYING OVERLAY FILTER \(overlayPath)")
-            let imageUrl = URL(fileURLWithPath: overlayPath)
-            if var overlayImage = CIImage(contentsOf: imageUrl) {
 
-              // inside CustomCompositeFilter.swift
+        guard let cleanOverlay = self.cachedOverlayImage else {
+            continue 
+        }
 
-              print("OVERLAY isInverted \(self.isInverted)")
-              if self.isInverted {
-                overlayImage = overlayImage.transformed(by: CGAffineTransform(scaleX: -1, y: -1)) // Flip Vertical only
-                overlayImage = overlayImage.transformed(by: CGAffineTransform(translationX: overlayImage.extent.width, y: overlayImage.extent.height))
-              }
 
-              filter.setValue(overlayImage, forKey: kCIInputImageKey)
-              // overlayFilter.backgroundImage = currentImage
-              filter.setValue(currentImage, forKey: backgroundImageKey)
+  
+        
+        // print("Applying overlay")
+        filter.setValue(cleanOverlay, forKey: kCIInputImageKey)
 
-           }
-          }
+
+      // if let overlayPath = filterSettings.overlayPath {
+                //  print("APPLYING OVERLAY FILTER \(overlayPath)")
+      // let imageUrl = URL(fileURLWithPath: overlayPath)
+      // if let overlayImage: CIImage = overlayImage {
+
+      // inside CustomCompositeFilter.swift
+
+      //  print("OVERLAY isInverted \(self.isInverted)")
+
+
+      // overlayFilter.backgroundImage = currentImage
+      filter.setValue(currentImage, forKey: kCIInputBackgroundImageKey)
+
+      //  }
+      // }
 
       } else {
-        print("APPLYING NORMAL FILTER")
-        filter.setValue(currentImage, forKey: kCIInputImageKey)
+            //  print("APPLYING NORMAL FILTER")
+      filter.setValue(currentImage, forKey: kCIInputImageKey)
       }
       guard let output = filter.outputImage else { return nil }
       currentImage = output

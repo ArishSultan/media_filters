@@ -53,7 +53,7 @@ public func vpApplyFilter(playerId: Int) {
 public func vpSize(playerId: Int) -> UnsafeMutableRawPointer {
   let sizePtr = UnsafeMutablePointer<CSize>.allocate(capacity: 1)
   if let resolution = VideoPlayer.get(playerId)?.getVideoResolution() {
-    print("i am here, \(resolution)")
+//    print("i am here, \(resolution)")
     sizePtr.pointee = CSize(width: resolution.width, height: resolution.height)
   }
 
@@ -171,10 +171,18 @@ public func transformVideo(
   dstFile: UnsafePointer<CChar>,
 
   //
-  onProgress: FloatValueCallback,
-  onCompletion: VoidCallback,
-  onError: StringValueCallback,
+  onProgress: @escaping FloatValueCallback,
+  onCompletion: @escaping VoidCallback,
+  onError: @escaping  StringValueCallback,
 ) {
+
+
+
+  let srcPath = String(cString: srcFile)
+  let dstPath = String(cString: dstFile)
+  let srcUrl = URL(fileURLWithPath: srcPath)
+  let dstUrl = URL(fileURLWithPath: dstPath)
+
   let filters = MediaFilters()
 
   if lutFile != nil {
@@ -188,23 +196,62 @@ public func transformVideo(
   filters.temperature = temperature
   filters.tint = tint
 
-  if let overlayPath = overlayPath  {
-    filters.overlayPath = String(cString: overlayPath)
+ 
+
+
+  let overlayUrl = overlayPath.map { URL(fileURLWithPath: String(cString: $0)) }
+  
+
+ if let overlayPath = overlayUrl  {
+    filters.overlayPath = overlayPath
+  }
+  // print("Overlay URL is NOT NIL \(overlayUrl != nil)")
+
+
+
+  Task {
+
+do {
+
+     try await VideoTransformer.transform(
+        id: id,
+
+        width: width,
+        height: height,
+        preserveAspectRatio: preserveAspectRatio,
+
+        srcUrl: srcUrl,
+        dstUrl: dstUrl,
+        overlayUrl: overlayUrl,
+        filters: filters,
+
+        onProgress: { progress in 
+                    DispatchQueue.main.async {
+                      // print("Sending data for progress \(progress)")
+                    onProgress(id, progress)
+                }
+        },
+        // onCompletion: onCompletion,
+        // onError: onError,
+      )
+
+      DispatchQueue.main.async {
+                onCompletion(id)
+            }
+
+  }
+  catch {
+      let errorMessage = error.localizedDescription
+            
+            DispatchQueue.main.async {
+                // We must convert the Swift String back to a C-String temporarily for the callback
+                errorMessage.withCString { cString in
+                    onError(id, cString)
+                }
+            }
   }
 
-  VideoTransformer.transform(
-    id: id,
-
-    width: width,
-    height: height,
-    preserveAspectRatio: preserveAspectRatio,
-
-    srcUrl: URL(fileURLWithPath: String(cString: srcFile)),
-    dstUrl: URL(fileURLWithPath: String(cString: dstFile)),
-    filters: filters,
-
-    onProgress: onProgress,
-    onCompletion: onCompletion,
-    onError: onError,
-  )
-}
+  }
+  
+  
+  }

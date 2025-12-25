@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "media_filters",
     platforms: [
-        .macOS("10.15"), .iOS("13.0")
+        .macOS("11.0"), .iOS("16.0")
     ],
     products: [
         .library(name: "media-filters", targets: ["media_filters"])

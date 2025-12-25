@@ -1,416 +1,400 @@
-import UIKit
-import CoreImage
-import AVFoundation
-import Metal
+ import AVFoundation
+ import CoreImage
+ import Metal
+ import UIKit
 
-public class VideoTransformer {
-  public static func transform(
-    id: Int,
-    width: Float,
-    height: Float,
-    preserveAspectRatio: Bool,
-    srcUrl: URL,
+ enum AppError: Error {
+     case customError(String)
+
+ }
+
+ public class VideoTransformer {
+   public static func transform(
+     id: Int,
+     width: Float,
+     height: Float,
+     preserveAspectRatio: Bool,
+     srcUrl: URL,
     dstUrl: URL,
+    overlayUrl: URL?,
     filters: MediaFilters,
-    onProgress: @escaping FloatValueCallback,
-    onCompletion: @escaping VoidCallback,
-    onError: @escaping StringValueCallback
-  ) {
-    func reportError(_ message: String) {
-      message.withCString { cString in onError(id, cString) }
-    }
+     onProgress: @escaping (Float) -> Void
 
-    DispatchQueue.global(qos: .userInitiated).async {
-      try? FileManager.default.removeItem(at: dstUrl)
+   ) async throws {
 
-      let asset = AVAsset(url: srcUrl)
-      let reader: AVAssetReader
-      let writer: AVAssetWriter
 
-      let videoTrack: AVAssetTrack
-      let videoReaderOutput: AVAssetReaderTrackOutput
-      let videoWriterInput: AVAssetWriterInput
-      let pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor
 
-      var audioReaderOutputs: [AVAssetReaderTrackOutput] = []
-      var audioWriterInputs: [AVAssetWriterInput] = []
-
-      // Declare targetStorageSize in outer scope
-      var targetStorageSize: CGSize = .zero
-      var targetDisplaySize: CGSize = .zero
-      var preferredTransform: CGAffineTransform = .identity
-
-      do {
-        guard let sourceVideoTrack = asset.tracks(withMediaType: .video).first else {
-          reportError("Source file does not contain a video track.")
-          return
-        }
-        videoTrack = sourceVideoTrack
-        let audioTracks = asset.tracks(withMediaType: .audio)
-
-        // Get original transform
-        preferredTransform = videoTrack.preferredTransform
-        // print("PREFFERED TRANSFORM \(preferredTransform.isIdentity)  a: \(preferredTransform.a)\nb: \(preferredTransform.b)\nc: \(preferredTransform.c)\nd: \(preferredTransform.d)\ntx: \(preferredTransform.tx)\nty: \(preferredTransform.ty) ")
-
-        // Calculate the target video size
-        let naturalSize = videoTrack.naturalSize
-
-        // Determine if rotation is 90° or 270°
-        let isRotated = abs(preferredTransform.a) == 0 && abs(preferredTransform.b) == 1
-
-        // Calculate display size (after applying transform)
-        var displaySize = naturalSize.applying(preferredTransform)
-        displaySize = CGSize(width: abs(displaySize.width), height: abs(displaySize.height))
-
-        // Calculate target display size
-        targetDisplaySize = displaySize
-        if width > 0 || height > 0 {
-          if preserveAspectRatio {
-            let aspectRatio = displaySize.width / displaySize.height
-            if width > 0 && height > 0 {
-              // Both dimensions specified - fit within bounds
-              let targetRatio = CGFloat(width) / CGFloat(height)
-              if aspectRatio > targetRatio {
-                targetDisplaySize.width = CGFloat(width)
-                targetDisplaySize.height = targetDisplaySize.width / aspectRatio
-              } else {
-                targetDisplaySize.height = CGFloat(height)
-                targetDisplaySize.width = targetDisplaySize.height * aspectRatio
-              }
-            } else if height > 0 {
-              targetDisplaySize.height = CGFloat(height)
-              targetDisplaySize.width = targetDisplaySize.height * aspectRatio
-            } else {
-              targetDisplaySize.width = CGFloat(width)
-              targetDisplaySize.height = targetDisplaySize.width / aspectRatio
-            }
-          } else {
-            if width > 0 { targetDisplaySize.width = CGFloat(width) }
-            if height > 0 { targetDisplaySize.height = CGFloat(height) }
-          }
-        }
-
-        // Calculate storage size (what we write to file)
-        targetStorageSize = isRotated ?
-          CGSize(width: targetDisplaySize.height, height: targetDisplaySize.width) :
-          targetDisplaySize
-
-        // Ensure even dimensions
-        targetStorageSize.width = floor(targetStorageSize.width / 2) * 2
-        targetStorageSize.height = floor(targetStorageSize.height / 2) * 2
-        targetDisplaySize.width = floor(targetDisplaySize.width / 2) * 2
-        targetDisplaySize.height = floor(targetDisplaySize.height / 2) * 2
-
-        reader = try AVAssetReader(asset: asset)
-        writer = try AVAssetWriter(url: dstUrl, fileType: .mov)
-
-        // Configure video reader output
-        let videoReaderSettings: [String: Any] = [
-          kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-          kCVPixelBufferIOSurfacePropertiesKey as String: [:]
-        ]
-        videoReaderOutput = AVAssetReaderTrackOutput(
-          track: videoTrack,
-          outputSettings: videoReaderSettings
-        )
-        videoReaderOutput.alwaysCopiesSampleData = false
-        if reader.canAdd(videoReaderOutput) { reader.add(videoReaderOutput) }
-
-        // Configure video writer input
-        let videoWriterSettings: [String: Any] = [
-          AVVideoCodecKey: AVVideoCodecType.h264,
-          AVVideoWidthKey: targetStorageSize.width,
-          AVVideoHeightKey: targetStorageSize.height,
-          AVVideoCompressionPropertiesKey: [
-            AVVideoAverageBitRateKey: Int(targetStorageSize.width * targetStorageSize.height * 4),
-            AVVideoExpectedSourceFrameRateKey: videoTrack.nominalFrameRate,
-            AVVideoMaxKeyFrameIntervalKey: 60,
-            AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
-          ]
-        ]
-        videoWriterInput = AVAssetWriterInput(
-          mediaType: .video,
-          outputSettings: videoWriterSettings
-        )
-        videoWriterInput.transform = preferredTransform
-        videoWriterInput.expectsMediaDataInRealTime = false
-
-        // Pixel buffer attributes
-        let pixelBufferAttributes: [String: Any] = [
-          kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-          kCVPixelBufferWidthKey as String: targetStorageSize.width,
-          kCVPixelBufferHeightKey as String: targetStorageSize.height,
-          kCVPixelBufferCGImageCompatibilityKey as String: true,
-          kCVPixelBufferCGBitmapContextCompatibilityKey as String: true,
-          kCVPixelBufferIOSurfacePropertiesKey as String: [:],
-          kCVPixelBufferMetalCompatibilityKey as String: true
-        ]
-        pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(
-          assetWriterInput: videoWriterInput,
-          sourcePixelBufferAttributes: pixelBufferAttributes
-        )
-        if writer.canAdd(videoWriterInput) { writer.add(videoWriterInput) }
-
-        // Configure audio pass-through
-        for audioTrack in audioTracks {
-          let audioReaderOutput = AVAssetReaderTrackOutput(
-            track: audioTrack,
-            outputSettings: nil
-          )
-          audioReaderOutput.alwaysCopiesSampleData = false
-          if reader.canAdd(audioReaderOutput) {
-            reader.add(audioReaderOutput)
-            audioReaderOutputs.append(audioReaderOutput)
-
-            let audioWriterInput = AVAssetWriterInput(
-              mediaType: .audio,
-              outputSettings: nil
-            )
-            audioWriterInput.expectsMediaDataInRealTime = false
-            if writer.canAdd(audioWriterInput) {
-              writer.add(audioWriterInput)
-              audioWriterInputs.append(audioWriterInput)
-            }
-          }
-        }
-
-      } catch {
-        reportError("AVFoundation setup failed: \(error.localizedDescription)")
-        return
-      }
-
-      guard reader.startReading(), writer.startWriting() else {
-        reportError("Failed to start reader/writer. Reader: \(reader.error?.localizedDescription ?? "OK"), Writer: \(writer.error?.localizedDescription ?? "OK")")
-        reader.cancelReading()
-        return
-      }
-      writer.startSession(atSourceTime: .zero)
-
-      let processingQueue = DispatchQueue(label: "media-processing-queue", qos: .userInteractive)
-      let dispatchGroup = DispatchGroup()
-
-      let durationInSeconds = CMTimeGetSeconds(asset.duration)
-      let frameRate = videoTrack.nominalFrameRate
-      let totalFrames = max(1, Int(durationInSeconds * Double(frameRate)))
-      var framesProcessed: Int = 0
-      let progressReportThreshold = max(1, totalFrames / 100)
-
-      var ciContext: CIContext
-      if let metalDevice = MTLCreateSystemDefaultDevice() {
-        ciContext = CIContext(mtlDevice: metalDevice, options: [
-          .workingColorSpace: CGColorSpace(name: CGColorSpace.linearSRGB)!,
-          .outputPremultiplied: true,
-          .cacheIntermediates: false
-        ])
+      let exportTargetSize = 
+      if width == 3840.0 && height == 2160.0 {
+        AVAssetExportPreset3840x2160
+      } else if width == 1920.0 && height == 1080.0 {
+        AVAssetExportPreset1920x1080
+      } else if width == 1280.0 && height == 720.0 {
+        AVAssetExportPreset1280x720
+      } else if width == 854.0 && height == 480.0 {
+        AVAssetExportPreset640x480
+      } else if width == 640.0 && height == 360.0 {
+        AVAssetExportPresetMediumQuality
       } else {
-        ciContext = CIContext(options: [
-          .workingColorSpace: CGColorSpace(name: CGColorSpace.linearSRGB)!,
-          .outputPremultiplied: true,
-          .useSoftwareRenderer: false
-        ])
+        AVAssetExportPresetHighestQuality
       }
 
-      let filter: CIFilter = filters.getCiFilter(!preferredTransform.isIdentity)
 
-      var pixelBufferCache: [CVPixelBuffer] = []
-      for _ in 0..<3 {
-        var pixelBuffer: CVPixelBuffer?
-        if let pool = pixelBufferAdaptor.pixelBufferPool {
-          CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixelBuffer)
-          if let buffer = pixelBuffer {
-            pixelBufferCache.append(buffer)
-          }
-        }
-      }
-      var bufferIndex = 0
+      // print("Export Target Size \(exportTargetSize)")
 
-      let processingSemaphore = DispatchSemaphore(value: 2)
-      let appendSemaphore = DispatchSemaphore(value: 1)
 
-      // Process Video Track
-      dispatchGroup.enter()
-      videoWriterInput.requestMediaDataWhenReady(on: processingQueue) {
-        while videoWriterInput.isReadyForMoreMediaData {
-          autoreleasepool {
-            if let sampleBuffer = videoReaderOutput.copyNextSampleBuffer() {
-              guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
-                CMSampleBufferInvalidate(sampleBuffer)
-                return
-              }
 
-              let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
 
-              processingSemaphore.wait()
+     func compositionLayerInstruction(for track: AVCompositionTrack, assetTrack: AVAssetTrack)
+       -> AVMutableVideoCompositionLayerInstruction
+     {
+       let instruction = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
+       let transform = assetTrack.preferredTransform
 
-              var outputPixelBuffer: CVPixelBuffer?
-              if bufferIndex < pixelBufferCache.count {
-                outputPixelBuffer = pixelBufferCache[bufferIndex % pixelBufferCache.count]
-              } else {
-                CVPixelBufferPoolCreatePixelBuffer(nil, pixelBufferAdaptor.pixelBufferPool!, &outputPixelBuffer)
-              }
-              bufferIndex += 1
+       instruction.setTransform(transform, at: .zero)
 
-              guard let outputBuffer = outputPixelBuffer else {
-                processingSemaphore.signal()
-                reportError("Failed to create output pixel buffer")
-                return
-              }
+       return instruction
+     }
 
-              // Apply filters
-              // 1. Create the raw image
-              let rawImage = CIImage(cvPixelBuffer: pixelBuffer)
+     func orientation(from transform: CGAffineTransform) -> (
+       orientation: UIImage.Orientation, isPortrait: Bool
+     ) {
+       var assetOrientation = UIImage.Orientation.up
+       var isPortrait = false
+       if transform.a == 0 && transform.b == 1.0 && transform.c == -1.0 && transform.d == 0 {
+         assetOrientation = .right
+         isPortrait = true
+       } else if transform.a == 0 && transform.b == -1.0 && transform.c == 1.0 && transform.d == 0 {
+         assetOrientation = .left
+         isPortrait = true
+       } else if transform.a == 1.0 && transform.b == 0 && transform.c == 0 && transform.d == 1.0 {
+         assetOrientation = .up
+       } else if transform.a == -1.0 && transform.b == 0 && transform.c == 0 && transform.d == -1.0 {
+         assetOrientation = .down
+       }
 
-              // 2. DETECT ORIENTATION CORRECTLY
-              // This logic checks if the video has a rotation metadata (preferredTransform).
-              // If it does (like iOS Portrait video), we apply it to make the image Upright.
-              // If it doesn't (like a Landscape video or pre-rendered Android video), this transform is likely .identity.
+       return (assetOrientation, isPortrait)
+     }
 
-              var workingImage = rawImage.transformed(by: preferredTransform)
+      // DispatchQueue.global(qos: .userInitiated).async {
 
-              // CORRECTION 1: Fix Origin Shift
-              // Rotations often throw the image origin into negative coordinates.
-              // We force the origin back to (0,0) so the filter applies at the correct "bottom-left" of the visible area.
-              workingImage = workingImage.transformed(by: CGAffineTransform(
-                  translationX: -workingImage.extent.origin.x,
-                  y: -workingImage.extent.origin.y
-              ))
+       try? FileManager.default.removeItem(at: dstUrl)
+       let asset = AVAsset(url: srcUrl)
 
-              // 3. APPLY FILTER
-              // Now workingImage is guaranteed to be "Upright" and at (0,0).
-              filter.setValue(workingImage, forKey: kCIInputImageKey)
+       let composition = AVMutableComposition()
 
-              guard let filteredImage = filter.outputImage else {
-                  processingSemaphore.signal()
-                  CMSampleBufferInvalidate(sampleBuffer)
-                  return
-              }
+       guard
+         let compositionTrack = composition.addMutableTrack(
+           withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+         let assetTrack = asset.tracks(withMediaType: .video).first
+       else {
+         let assetTrack = asset.tracks(withMediaType: .video)
+        //  print("Something is wrong with the asset. \(assetTrack.count)")
+          // onComplete(nil)
+         throw AppError.customError("Something is wrong with the asset.")
+          // return
+       }
 
-              // 4. PREPARE FOR OUTPUT
-              // The AVAssetWriter expects frames in the *original* raw orientation (e.g., sideways for Portrait video).
-              // We must undo the rotation we did in step 2.
+       do {
+         let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+         try compositionTrack.insertTimeRange(timeRange, of: assetTrack, at: .zero)
 
-              var finalImage = filteredImage.transformed(by: preferredTransform.inverted())
+         if let audioAssetTrack = asset.tracks(withMediaType: .audio).first,
+           let compositionAudioTrack = composition.addMutableTrack(
+             withMediaType: .audio,
+             preferredTrackID: kCMPersistentTrackID_Invalid)
+         {
+           try compositionAudioTrack.insertTimeRange(
+             timeRange,
+             of: audioAssetTrack,
+             at: .zero)
+         }
+       } catch {
+        //  print(error)
+          // onComplete(nil)
+          // onError()
+         throw AppError.customError("Error while inserting time range to audio composition track")
+          // return
+       }
 
-              // CORRECTION 2: Fix Origin Shift (Again)
-              // The inverse rotation might also throw coordinates off. Fix them again.
-              finalImage = finalImage.transformed(by: CGAffineTransform(
-                  translationX: -finalImage.extent.origin.x,
-                  y: -finalImage.extent.origin.y
-              ))
+       compositionTrack.preferredTransform = assetTrack.preferredTransform
+       let videoInfo = orientation(from: assetTrack.preferredTransform)
 
-              // 5. SCALE TO BUFFER
-              // This ensures that whether the video was Landscape or Portrait, 
-              // the final image fits perfectly into the pixel buffer we are about to write.
-              let targetWidth = CGFloat(CVPixelBufferGetWidth(outputBuffer))
-              let targetHeight = CGFloat(CVPixelBufferGetHeight(outputBuffer))
+       let videoSize: CGSize
+       if videoInfo.isPortrait {
+         videoSize = CGSize(
+           width: assetTrack.naturalSize.height,
+           height: assetTrack.naturalSize.width)
+       } else {
+         videoSize = assetTrack.naturalSize
+       }
+      //  print("Before creating filter")
+       let filter: CIFilter = filters.ciFilter
+      //  print("After creating filter")
+       let videoComposition = AVMutableVideoComposition(
+         asset: composition,
+         applyingCIFiltersWithHandler: {  request in
 
-              // We use the extent of the *rotated* image to calculate scale.
-              let scaleX = targetWidth / finalImage.extent.width
-              let scaleY = targetHeight / finalImage.extent.height
 
-              // Scale to fit (stretching if necessary to fill the buffer completely)
-              finalImage = finalImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+          //  print("Before source image")
+           let source = request.sourceImage
+          //  print("After source image")
+           filter.setValue(source, forKey: kCIInputImageKey)
+          //  print("After Setting value")
 
-              // Center (safety measure)
-              let offsetX = (targetWidth - finalImage.extent.width) / 2
-              let offsetY = (targetHeight - finalImage.extent.height) / 2
-              finalImage = finalImage.transformed(by: CGAffineTransform(translationX: offsetX, y: offsetY))
+           if  let filteredImage = filter.outputImage {
+          //  print("Finish Perfectly")
+             request.finish(with: filteredImage, context: nil)
+           } else {
+          //  print("Finish With error")
+               request.finish(with: AppError.customError("Error while applying filter"))
 
-              // 6. RENDER
-              CVPixelBufferLockBaseAddress(outputBuffer, [])
-              ciContext.render(
-                  finalImage,
-                  to: outputBuffer,
-                  bounds: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight),
-                  colorSpace: rawImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
-              )
-              CVPixelBufferUnlockBaseAddress(outputBuffer, [])
-              // }
+           }
 
-                appendSemaphore.wait()
-                let appendSuccess = pixelBufferAdaptor.append(outputBuffer, withPresentationTime: presentationTime)
-                appendSemaphore.signal()
+         }
+       )
 
-                if !appendSuccess {
-                  processingSemaphore.signal()
-                  reportError("Failed to append processed frame. Writer status: \(writer.status.rawValue)")
-                  return
-                }
-              // }
 
-              processingSemaphore.signal()
-              CMSampleBufferInvalidate(sampleBuffer)
+        // TODO (arbaz): Issue is here
+       videoComposition.renderSize = videoSize
+      // videoComposition.renderSize = CGSize(width: Double(height), height: Double(width))
 
-              framesProcessed += 1
-              if framesProcessed % progressReportThreshold == 0 || framesProcessed == totalFrames {
-                let progress = min(1.0, Float(framesProcessed) / Float(totalFrames))
-                DispatchQueue.main.async {
-                  onProgress(id, progress)
-                }
-              }
+       videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
 
-            } else {
-              for _ in 0..<2 {
-                processingSemaphore.wait()
-                processingSemaphore.signal()
-              }
-              videoWriterInput.markAsFinished()
-              dispatchGroup.leave()
-              return
-            }
-          }
-        }
-      }
 
-      // Process Audio Tracks
-      for i in 0..<audioWriterInputs.count {
-        dispatchGroup.enter()
-        let audioWriterInput = audioWriterInputs[i]
-        let audioReaderOutput = audioReaderOutputs[i]
 
-        audioWriterInput.requestMediaDataWhenReady(on: processingQueue) {
-          while audioWriterInput.isReadyForMoreMediaData {
-            autoreleasepool {
-              if let sampleBuffer = audioReaderOutput.copyNextSampleBuffer() {
-                if !audioWriterInput.append(sampleBuffer) {
-                  CMSampleBufferInvalidate(sampleBuffer)
-                  return
-                }
-                CMSampleBufferInvalidate(sampleBuffer)
-              } else {
-                audioWriterInput.markAsFinished()
-                dispatchGroup.leave()
-                return
-              }
-            }
-          }
-        }
-      }
+      //  let videoComposition = AVMutableVideoComposition()
 
-      // Finalize
-      dispatchGroup.notify(queue: .main) {
-        if reader.status == .failed {
-          reportError("Processing failed because the reader encountered an error: \(reader.error?.localizedDescription ?? "Unknown error")")
-          writer.cancelWriting()
-          return
-        }
+      // // 1. Set global properties
+      // videoComposition.renderSize = videoSize
+      // videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
 
-        writer.finishWriting {
-          DispatchQueue.main.async {
-            switch writer.status {
-            case .completed:
-              print("Video processing completed successfully.")
-              onProgress(id, 1.0)
-              onCompletion(id)
-            case .failed:
-              reportError("The writer failed to save the video: \(writer.error?.localizedDescription ?? "Unknown error")")
-            case .cancelled:
-              reportError("Video processing was cancelled.")
-            default: break
-            }
-          }
-        }
-      }
-    }
-  }
-}
+      // // 2. Enable Custom Compositor (Handles Filter + Scaling)
+      // videoComposition.customVideoCompositorClass = FilterCompositor.self
+
+      // // 3. Create Instruction (Pass Filter Data)
+      // let instruction = FilterInstruction(
+      //   timeRange: CMTimeRange(start: .zero, duration: composition.duration),
+      //   filter: filter,
+      //   transform: compositionTrack.preferredTransform,
+      //       // transform: rotationTransform,  // e.g., CGAffineTransform(rotationAngle: .pi/2)
+      //   naturalSize: videoSize,  // Pass the original video size
+      //   trackID: compositionTrack.trackID,
+      // )
+      // // instruction.requiredSourceTrackIDs = [NSNumber(value: kCMPersistentTrackID_Invalid)]
+
+      // videoComposition.instructions = [instruction]
+
+      
+
+      // if let overlayUrl = overlayUrl {
+       
+      //       let parentLayer = CALayer()
+      //       parentLayer.frame = CGRect(origin: .zero, size: videoSize)
+      //       parentLayer.isGeometryFlipped = true 
+
+      //       let videoLayer = CALayer()
+      //       videoLayer.frame = CGRect(origin: .zero, size: videoSize)
+            
+      //       let overlayLayer = CALayer()
+      //       overlayLayer.frame = CGRect(origin: .zero, size: videoSize)
+            
+      //       if let data = try? Data(contentsOf: overlayUrl),
+      //          let image = UIImage(data: data) {
+                
+      //           overlayLayer.contents = image.cgImage
+      //           overlayLayer.contentsGravity = .resizeAspectFill 
+      //       }
+
+      //       parentLayer.addSublayer(videoLayer)  
+      //       parentLayer.addSublayer(overlayLayer) 
+
+      //       let animationTool = AVVideoCompositionCoreAnimationTool(
+      //           postProcessingAsVideoLayer: videoLayer,
+      //           in: parentLayer
+      //       )
+            
+      //       videoComposition.animationTool = animationTool
+
+      //       print("Applied overlay layer")
+      //   }
+
+
+
+       guard
+         let export = AVAssetExportSession(
+           asset: composition,
+           presetName: exportTargetSize)
+       else {
+        //  print("Cannot create export session.")
+         throw AppError.customError("Cannot create export session.")
+
+       }
+
+       export.videoComposition = videoComposition
+       do {
+
+        
+        
+
+         let exportTask = Task {
+             try await export.export(to: dstUrl, as: .mp4)
+
+         } 
+
+
+
+           if #available(iOS 18.0, *) {
+             for await progressState in export.states(updateInterval: 0.1) {
+               switch progressState {
+               case .waiting:
+                  break
+                //  print("Export is waiting...")
+               case .pending:
+                  break
+                //  print("Export is pending...")
+               case .exporting(let progress):
+                 let currentProgress = Float(progress.fractionCompleted)
+                    
+                    //  print("Export progress: \(currentProgress * 100)%")
+                    
+                         onProgress( currentProgress)
+
+               default:
+                 break
+               }
+             }
+
+           } else {
+               while export.status == .waiting || export.status == .exporting {
+                  
+                   if export.status == .exporting {
+                       let progress = export.progress
+                          onProgress(progress)
+                         
+                   }
+                  
+                   try? await Task.sleep(nanoseconds: 100_000_000) 
+               }
+           }
+
+           let _ = await exportTask
+
+
+       } catch {
+        //  print("Error while exporting \(error)")
+         throw AppError.customError("Error while exporting ")
+       }
+
+  //  }
+
+   }
+
+
+ }
+
+
+// class FilterInstruction: NSObject, AVVideoCompositionInstructionProtocol {
+//     var timeRange: CMTimeRange
+//     var enablePostProcessing: Bool = true
+//     var containsTweening: Bool = true  // Must be true when applying filters
+//     var requiredSourceTrackIDs: [NSValue]? 
+//     var passthroughTrackID: CMPersistentTrackID = kCMPersistentTrackID_Invalid
+    
+//     let filter: CIFilter
+//     let rotateTransform: CGAffineTransform
+//     let naturalSize: CGSize  // Add this to track original video size
+    
+//     init(timeRange: CMTimeRange, filter: CIFilter, transform: CGAffineTransform, naturalSize: CGSize, trackID: CMPersistentTrackID) {
+//         self.timeRange = timeRange
+//         self.filter = filter
+//         self.rotateTransform = transform
+//         self.naturalSize = naturalSize
+//         self.requiredSourceTrackIDs = [NSNumber(value: trackID)]
+//         super.init()
+//     }
+// }
+
+// class FilterCompositor: NSObject, AVVideoCompositing {
+    
+//  var sourcePixelBufferAttributes: [String: Any]? = [
+//         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+//     ]
+    
+//     var requiredPixelBufferAttributesForRenderContext: [String: Any] = [
+//         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+//     ]
+    
+//     private let ciContext: CIContext
+    
+//     override init() {
+//         // Standard high-performance Context setup
+//         if let device = MTLCreateSystemDefaultDevice() {
+//             self.ciContext = CIContext(mtlDevice: device)
+//         } else {
+//             self.ciContext = CIContext()
+//         }
+//         super.init()
+//     }
+    
+//     func renderContextChanged(_ newRenderContext: AVVideoCompositionRenderContext) { }
+    
+//     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
+//         // 1. Extract Instruction & Track ID
+//         guard let instruction = request.videoCompositionInstruction as? FilterInstruction,
+//               let trackIDs = instruction.requiredSourceTrackIDs,
+//               let trackID = trackIDs.first as? NSNumber else {
+//             request.finish(with: AppError.customError("Invalid Instruction"))
+//             return
+//         }
+        
+//         // 2. Fetch the Frame using the REAL Track ID
+//         guard let sourceBuffer = request.sourceFrame(byTrackID: trackID.int32Value) else {
+//             request.finish(with: AppError.customError("Missing source frame"))
+//             return
+//         }
+        
+//         let sourceImage = CIImage(cvPixelBuffer: sourceBuffer).clampedToExtent()
+        
+//         // 3. Apply Transform (The Simple Way)
+//         // Just apply the preference. If it rotates 90 deg, it might move to negative coords.
+//         let orientedImage = sourceImage.transformed(by: instruction.rotateTransform)
+        
+//         // 4. Re-center (Fix Origin)
+//         // Shift the image so its new origin is at (0,0)
+//         let centeredImage = orientedImage.transformed(by: CGAffineTransform(
+//             translationX: -orientedImage.extent.origin.x,
+//             y: -orientedImage.extent.origin.y
+//         ))
+        
+//         // 5. Scale to Output Size
+//         let renderSize = request.renderContext.size
+//         let scaleX = renderSize.width / centeredImage.extent.width
+//         let scaleY = renderSize.height / centeredImage.extent.height
+        
+//         // Use max() for Aspect Fill (Cover), min() for Aspect Fit
+//         // We use distinct scales here to ensure it fills the frame exactly as requested
+//         let scaledImage = centeredImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+        
+//         // 6. Apply Filter
+//         instruction.filter.setValue(scaledImage, forKey: kCIInputImageKey)
+        
+//         guard let outputImage = instruction.filter.outputImage,
+//               let destinationBuffer = request.renderContext.newPixelBuffer() 
+//         else {
+//             request.finish(with: AppError.customError("Render failed"))
+//             return
+//         }
+        
+//         // 7. Render
+//         // Crop to exact renderSize to avoid glitches
+//         let finalOutput = outputImage.cropped(to: CGRect(origin: .zero, size: renderSize))
+        
+//         ciContext.render(finalOutput, to: destinationBuffer)
+//         request.finish(withComposedVideoFrame: destinationBuffer)
+//     }
+//     func cancelAllPendingVideoCompositionRequests() {
+//         // Implement cancellation if needed
+//         // For basic implementation, this can be empty
+//     }
+// }
