@@ -8,6 +8,15 @@
 
  }
 
+
+enum VideoQuality: CGFloat {
+    case uhd4k = 2160
+    case fhd1080 = 1080
+    case hd720 = 720
+    case sd480 = 480
+    case sd360 = 360
+}
+
  public class VideoTransformer {
    public static func transform(
      id: Int,
@@ -24,39 +33,31 @@
 
 
 
-      let exportTargetSize = 
+      let exportQuality: VideoQuality = 
       if width == 3840.0 && height == 2160.0 {
-        AVAssetExportPreset3840x2160
+        // AVAssetExportPreset3840x2160
+        .uhd4k
       } else if width == 1920.0 && height == 1080.0 {
-        AVAssetExportPreset1920x1080
+        // AVAssetExportPreset1920x1080
+        .fhd1080
       } else if width == 1280.0 && height == 720.0 {
-        AVAssetExportPreset1280x720
+        // AVAssetExportPreset1280x720
+        .hd720
       } else if width == 854.0 && height == 480.0 {
-        AVAssetExportPreset640x480
+        // AVAssetExportPreset640x480
+        .sd480
       } else if width == 640.0 && height == 360.0 {
-        AVAssetExportPresetMediumQuality
+        // AVAssetExportPresetMediumQuality
+        .sd360
       } else {
-        AVAssetExportPresetHighestQuality
+        // AVAssetExportPresetHighestQuality
+        .fhd1080
       }
 
 
       // print("Export Target Size \(exportTargetSize)")
 
-
-
-
-     func compositionLayerInstruction(for track: AVCompositionTrack, assetTrack: AVAssetTrack)
-       -> AVMutableVideoCompositionLayerInstruction
-     {
-       let instruction = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
-       let transform = assetTrack.preferredTransform
-
-       instruction.setTransform(transform, at: .zero)
-
-       return instruction
-     }
-
-     func orientation(from transform: CGAffineTransform) -> (
+      func orientation(from transform: CGAffineTransform) -> (
        orientation: UIImage.Orientation, isPortrait: Bool
      ) {
        var assetOrientation = UIImage.Orientation.up
@@ -75,6 +76,68 @@
 
        return (assetOrientation, isPortrait)
      }
+
+
+     func calculateTargetSize(originalSize: CGSize, quality: VideoQuality, isPortrait: Bool) -> CGSize {
+        let targetDimension = quality.rawValue
+        // let isPortrait = originalSize.height > originalSize.width
+        let aspectRatio = originalSize.width / originalSize.height
+        
+        var newWidth: CGFloat
+        var newHeight: CGFloat
+        
+        if isPortrait {
+            // Option A: "Social Media Style" (High Quality Portrait)
+            // We set the WIDTH to the target (e.g., 1080 wide)
+            newWidth = targetDimension
+            newHeight = targetDimension / aspectRatio
+            
+            // Option B: "TV Style" (Fit inside TV screen)
+            // If you prefer the video to fit INSIDE a 1920x1080 screen, uncomment this:
+            /*
+            newHeight = targetDimension
+            newWidth = targetDimension * aspectRatio
+            */
+            
+        } else {
+            // Landscape: We set the HEIGHT to the target (Standard)
+            newHeight = targetDimension
+            newWidth = targetDimension * aspectRatio
+        }
+        
+        // Ensure Divisible by 2 (Critical for Export)
+        let finalWidth = floor(newWidth / 2.0) * 2.0
+        let finalHeight = floor(newHeight / 2.0) * 2.0
+        
+        return CGSize(width: finalWidth, height: finalHeight)
+      }
+
+
+     func compositionLayerInstruction(for track: AVCompositionTrack, assetTrack: AVAssetTrack)
+       -> AVMutableVideoCompositionLayerInstruction
+     {
+       let instruction = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
+       let transform = assetTrack.preferredTransform
+
+       instruction.setTransform(transform, at: .zero)
+
+       return instruction
+     }
+
+
+     func resizeImage(inputImage: CIImage?, scale: Float, aspectRatio: Float) -> CIImage? {    
+        guard let inputImage = inputImage else {
+          return nil
+        }
+
+        let lanczosScaleFilter = CIFilter.lanczosScaleTransform()
+        lanczosScaleFilter.inputImage = inputImage
+        lanczosScaleFilter.scale = scale
+        lanczosScaleFilter.aspectRatio = aspectRatio
+        return lanczosScaleFilter.outputImage
+    }
+
+
 
       // DispatchQueue.global(qos: .userInitiated).async {
 
@@ -121,14 +184,30 @@
        let videoInfo = orientation(from: assetTrack.preferredTransform)
 
        let videoSize: CGSize
-       if videoInfo.isPortrait {
-         videoSize = CGSize(
-           width: assetTrack.naturalSize.height,
-           height: assetTrack.naturalSize.width)
-       } else {
-         videoSize = assetTrack.naturalSize
-       }
-      //  print("Before creating filter")
+        if videoInfo.isPortrait {
+          videoSize = CGSize(
+            width: assetTrack.naturalSize.height,
+            height: assetTrack.naturalSize.width)
+        } else {
+          videoSize = assetTrack.naturalSize
+        }
+      //   if videoInfo.isPortrait {
+      //    videoSize =  CGSize(
+      //      width: Double(height),
+      //      height: Double(width))
+      //  } else {
+      //   videoSize =  CGSize(
+      //      width: Double(width),
+      //      height: Double(height)
+      //      )
+      //  }
+      // //  print("Before creating filter")
+
+        let targetSize =  calculateTargetSize(originalSize: videoSize, quality: exportQuality, isPortrait: videoInfo.isPortrait)
+        let scale = Float(targetSize.height) / Float(videoSize.height)
+        let aspectRatio = Float(targetSize.width)/(Float(videoSize.width) * scale)
+
+
        let filter: CIFilter = filters.ciFilter
       //  print("After creating filter")
        let videoComposition = AVMutableVideoComposition(
@@ -137,12 +216,26 @@
 
 
           //  print("Before source image")
-           let source = request.sourceImage
-          //  print("After source image")
-           filter.setValue(source, forKey: kCIInputImageKey)
-          //  print("After Setting value")
+            let source = request.sourceImage 
 
-           if  let filteredImage = filter.outputImage {
+          
+
+
+            // print("SOURCE IMAGE SIZE \(source.extent.width)x\(source.extent.height)")
+            // print("REQUEST RENDER SIZE \(request.renderSize.width)x\(request.renderSize.height)")
+
+//            let scaleX =  request.renderSize.width / source.extent.width
+//            let scaleY = request.renderSize.height / source.extent.height
+//           //  print("After Setting value")
+// // filter.outputImage?.transformed(by: CGAffineTransform(scaleX: , y: ))
+//            if  let filteredImage = resizeImage(inputImage: filter.outputImage, scale: Float(scaleY), aspectRatio: Float(scaleX / scaleY)) {
+          //  print("After source image")
+           filter.setValue(source ,  forKey: kCIInputImageKey)
+            // let scale = Float(request.renderSize.height) / Float(source.extent.height)
+            // let aspectRatio = Float(request.renderSize.width)/(Float(source.extent.width) * scale)
+          //  print("After Setting value")
+// filter.outputImage?.transformed(by: CGAffineTransform(scaleX: , y: ))
+           if  let filteredImage = resizeImage(inputImage: filter.outputImage, scale: scale, aspectRatio: aspectRatio) {
           //  print("Finish Perfectly")
              request.finish(with: filteredImage, context: nil)
            } else {
@@ -156,7 +249,11 @@
 
 
         // TODO (arbaz): Issue is here
-       videoComposition.renderSize = videoSize
+       videoComposition.renderSize = targetSize
+      //  videoSize
+
+//      print("VIDEO COMPOSITION RENDER SIZE \(videoSize.width)x\(videoSize.height)")
+
       // videoComposition.renderSize = CGSize(width: Double(height), height: Double(width))
 
        videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
@@ -224,7 +321,7 @@
        guard
          let export = AVAssetExportSession(
            asset: composition,
-           presetName: exportTargetSize)
+           presetName: AVAssetExportPresetHighestQuality)
        else {
         //  print("Cannot create export session.")
          throw AppError.customError("Cannot create export session.")
@@ -289,6 +386,34 @@
   //  }
 
    }
+
+
+
+
+
+   private static func isPortraitVideoTrack(_ track: AVAssetTrack) -> Bool {
+        let transform = track.preferredTransform
+        let tfA = transform.a
+        let tfB = transform.b
+        let tfC = transform.c
+        let tfD = transform.d
+        
+        if (tfA == 0 && tfB == 1 && tfC == -1 && tfD == 0) ||
+            (tfA == 0 && tfB == 1 && tfC == 1 && tfD == 0) ||
+            (tfA == 0 && tfB == -1 && tfC == 1 && tfD == 0) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    private static func getNaturalSize(videoTrack: AVAssetTrack) -> CGSize {
+        var size = videoTrack.naturalSize
+        if isPortraitVideoTrack(videoTrack) {
+            swap(&size.width, &size.height)
+        }
+        return size
+    }
 
 
  }
